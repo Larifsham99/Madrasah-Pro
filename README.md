@@ -20,6 +20,10 @@ Sistem pengurusan madrasah — pelajar & waris, kutipan yuran bulanan, resit, su
 | Tetapan Bayaran | Kadar lalai, jenis yuran lalai, kaedah bayaran, butang amaun pantas, tindakan selepas bayar, awalan no. resit, nota resit |
 | Keselamatan | Log masuk Admin/Kerani berkata laluan, kunci automatik 15 minit |
 
+## Struktur Yuran
+- **Yuran Sekolah**: dikenakan **sekali setahun**; boleh dibayar secara **ansuran**.
+- **Yuran Makan**: dikenakan **setiap bulan** bermula bulan daftar masuk.
+
 ## Nota
 - Logo lalai resit: muat naik `171855_2.png` ke folder utama repo (atau guna kepala surat di Tetapan).
 - Data disimpan dalam peranti (localStorage). Gunakan **Muat Turun Sandaran** untuk backup / pindah peranti.
