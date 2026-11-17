@@ -17,6 +17,7 @@ Sistem pengurusan madrasah — pelajar & waris, kutipan yuran bulanan, resit, su
 | Resit & WhatsApp | Resit rasmi A4 auto-jana, muat turun PDF, kongsi PDF ke WhatsApp, mesej auto-jana |
 | Dokumen | Surat Pengesahan Pelajar, muat naik kepala surat (PNG/JPG), format A4 sedia cetak/PDF |
 | Laporan | Kutipan harian/bulanan/tahunan, senarai tunggakan, eksport CSV (Excel) & PDF |
+| Tetapan Bayaran | Kadar lalai, jenis yuran lalai, kaedah bayaran, butang amaun pantas, tindakan selepas bayar, awalan no. resit, nota resit |
 | Keselamatan | Log masuk Admin/Kerani berkata laluan, kunci automatik 15 minit |
 
 ## Nota

@@ -78,6 +78,8 @@
   .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
   #discFields.disabled { opacity: .5; pointer-events: none; }
+  .bk-bar { bottom: calc(62px + env(safe-area-inset-bottom)); }
+  @media (min-width: 768px) { .bk-bar { bottom: 0; left: 16rem; } }
   .month-cell.selected { outline: 3px solid rgb(var(--p-600)); outline-offset: 1px; }
 
   /* ===== Dokumen A4 ===== */
@@ -377,59 +379,144 @@
 
       <!-- ===================== KUTIPAN YURAN ===================== -->
       <section id="tab-payment" class="tab-panel">
-        <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
-          <div class="min-w-0 space-y-5 lg:col-span-3">
-            <div class="card p-5 md:p-6">
-              <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">1</span> Pilih Pelajar</h3>
-              <div id="payPicker" class="relative mt-4">
-                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
-                <input id="paySearch" class="field pl-9" type="search" autocomplete="off" placeholder="Taip nama pelajar, No. KP atau nama waris...">
-                <div id="payResults" class="absolute inset-x-0 top-full z-20 mt-1 hidden max-h-72 overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-slate-200"></div>
-              </div>
-              <div id="paySelected" class="mt-4 hidden"></div>
-            </div>
+        <div class="mb-4 flex overflow-x-auto rounded-xl bg-slate-200/70 p-1 text-sm font-semibold text-slate-600 scrollbar-thin">
+          <button data-pm="single" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-bolt mr-1"></i> Bayaran Pantas</button>
+          <button data-pm="bulk" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-users-line mr-1"></i> Mod Pukal</button>
+          <button data-pm="records" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-receipt mr-1"></i> Rekod &amp; Resit</button>
+        </div>
 
-            <div id="payStep2" class="card hidden p-5 md:p-6">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">2</span> Jenis Yuran &amp; Bulan</h3>
-                <div class="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-500">
-                  <button type="button" data-jenis="sekolah" class="pay-jenis seg-btn rounded-lg px-3 py-1.5"><i class="fa-solid fa-school mr-1"></i> Sekolah</button>
-                  <button type="button" data-jenis="makan" class="pay-jenis seg-btn rounded-lg px-3 py-1.5"><i class="fa-solid fa-utensils mr-1"></i> Makan</button>
+        <!-- ===== Bayaran Pantas (seorang) ===== -->
+        <div id="pm-single" class="pm-panel">
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
+            <div class="min-w-0 space-y-5 lg:col-span-3">
+              <div class="card p-5 md:p-6">
+                <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">1</span> Siapa yang membayar?</h3>
+                <div id="payPicker" class="relative mt-4">
+                  <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                  <input id="paySearch" class="field pl-9" type="search" autocomplete="off" placeholder="Tekan di sini atau taip nama / No. KP / nama waris...">
+                  <div id="payResults" class="absolute inset-x-0 top-full z-20 mt-1 hidden max-h-80 overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-slate-200"></div>
+                </div>
+                <div id="paySelected" class="mt-4 hidden"></div>
+              </div>
+
+              <div id="payStep2" class="card hidden p-5 md:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">2</span> Bayar untuk apa?</h3>
+                  <div class="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-500">
+                    <button type="button" data-jenis="makan" class="pay-jenis seg-btn rounded-lg px-3 py-1.5"><i class="fa-solid fa-utensils mr-1"></i> Makan</button>
+                    <button type="button" data-jenis="sekolah" class="pay-jenis seg-btn rounded-lg px-3 py-1.5"><i class="fa-solid fa-school mr-1"></i> Sekolah</button>
+                    <button type="button" data-jenis="both" class="pay-jenis seg-btn rounded-lg px-3 py-1.5"><i class="fa-solid fa-layer-group mr-1"></i> Kedua-dua</button>
+                  </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <button type="button" onclick="payPickThisMonth()" class="rounded-xl bg-primary-50 px-3 py-2.5 text-xs font-bold text-primary-700 ring-1 ring-primary-100"><i class="fa-solid fa-calendar-day mr-1"></i> Bulan Ini</button>
+                  <button type="button" onclick="paySelectDue()" class="rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 ring-1 ring-rose-100"><i class="fa-solid fa-list-check mr-1"></i> Semua Tunggakan</button>
+                  <button type="button" onclick="payAddNext()" class="rounded-xl bg-sky-50 px-3 py-2.5 text-xs font-bold text-sky-700 ring-1 ring-sky-100"><i class="fa-solid fa-plus mr-1"></i> Tambah 1 Bulan</button>
+                  <button type="button" onclick="payClearSel()" class="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold text-slate-600"><i class="fa-solid fa-eraser mr-1"></i> Kosongkan</button>
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                  <button type="button" onclick="payYear(-1)" class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100"><i class="fa-solid fa-chevron-left"></i></button>
+                  <p class="text-center text-sm font-bold">Tahun <span id="payYearLbl">-</span><br><span id="payRateLbl" class="text-xs font-medium text-slate-500">-</span></p>
+                  <button type="button" onclick="payYear(1)" class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                <div id="payMonths" class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6"></div>
+                <div class="mt-3 flex flex-wrap gap-3 text-[11px] text-slate-500">
+                  <span><i class="fa-solid fa-square text-emerald-400"></i> Telah Bayar</span><span><i class="fa-solid fa-square text-amber-400"></i> Sebahagian</span><span><i class="fa-solid fa-square text-rose-400"></i> Tertunggak</span><span><i class="fa-solid fa-square text-slate-300"></i> Belum Tiba</span>
                 </div>
               </div>
-              <div class="mt-4 flex items-center justify-between">
-                <button type="button" onclick="payYear(-1)" class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100"><i class="fa-solid fa-chevron-left"></i></button>
-                <p class="text-sm font-bold">Tahun <span id="payYearLbl">-</span> &middot; <span id="payRateLbl" class="text-slate-500">-</span></p>
-                <button type="button" onclick="payYear(1)" class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100"><i class="fa-solid fa-chevron-right"></i></button>
-              </div>
-              <div id="payMonths" class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6"></div>
-              <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                <button type="button" onclick="paySelectDue()" class="rounded-lg bg-rose-50 px-3 py-1.5 font-semibold text-rose-700"><i class="fa-solid fa-list-check mr-1"></i> Pilih semua tertunggak</button>
-                <button type="button" onclick="payClearSel()" class="rounded-lg bg-slate-100 px-3 py-1.5 font-semibold text-slate-600">Kosongkan pilihan</button>
-              </div>
-              <div class="mt-3 flex flex-wrap gap-3 text-[11px] text-slate-500">
-                <span><i class="fa-solid fa-square text-emerald-400"></i> Telah Bayar</span><span><i class="fa-solid fa-square text-amber-400"></i> Bayaran Sebahagian</span><span><i class="fa-solid fa-square text-rose-400"></i> Tertunggak</span><span><i class="fa-solid fa-square text-slate-300"></i> Belum Tiba</span>
-              </div>
             </div>
-          </div>
 
-          <div class="min-w-0 lg:col-span-2">
-            <form id="payForm" class="card sticky top-24 hidden p-5 md:p-6" novalidate>
-              <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">3</span> Butiran Bayaran</h3>
-              <div id="paySummary" class="mt-4 rounded-xl bg-slate-50 p-4 text-sm"></div>
-              <div class="mt-4 space-y-4">
-                <div><label class="label" for="pAmaun">Jumlah Diterima (RM) <span class="text-rose-500">*</span></label><input id="pAmaun" class="field text-lg font-bold" type="number" min="0" step="0.01" inputmode="decimal"><p class="mt-1 text-[11px] text-slate-500">Boleh ubah untuk bayaran sebahagian. Bayaran diagih mengikut turutan bulan.</p></div>
-                <div class="grid grid-cols-2 gap-3">
+            <div class="min-w-0 lg:col-span-2">
+              <form id="payForm" class="card sticky top-24 hidden p-5 md:p-6" novalidate>
+                <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">3</span> Terima Bayaran</h3>
+                <div id="paySummary" class="mt-4 rounded-xl bg-slate-50 p-4 text-sm"></div>
+                <div class="mt-4 space-y-4">
+                  <div>
+                    <label class="label" for="pAmaun">Jumlah Diterima (RM)</label>
+                    <input id="pAmaun" class="field text-xl font-extrabold" type="number" min="0" step="0.01" inputmode="decimal">
+                    <div id="pAmaunChips" class="mt-2 flex flex-wrap gap-2"></div>
+                  </div>
+                  <div><span class="label">Kaedah Bayaran</span><div id="pKaedahChips" class="flex flex-wrap gap-2"></div></div>
                   <div><label class="label" for="pTarikh">Tarikh Bayaran</label><input id="pTarikh" class="field" type="date"></div>
-                  <div><label class="label" for="pKaedah">Kaedah</label><select id="pKaedah" class="field"></select></div>
+                  <details class="rounded-xl bg-slate-50 px-3 py-2">
+                    <summary class="cursor-pointer py-1 text-xs font-semibold text-slate-600">Butiran tambahan (pilihan)</summary>
+                    <div class="mt-2 space-y-3 pb-2">
+                      <div><label class="label" for="pRujukan">No. Rujukan Bank / Cek</label><input id="pRujukan" class="field" type="text"></div>
+                      <div><label class="label" for="pCatatan">Catatan</label><input id="pCatatan" class="field" type="text"></div>
+                    </div>
+                  </details>
+                  <button id="paySubmit" type="submit" class="w-full rounded-xl bg-primary-600 px-5 py-4 text-base font-extrabold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-receipt mr-1"></i> <span>Simpan &amp; Jana Resit</span></button>
                 </div>
-                <div><label class="label" for="pRujukan">No. Rujukan Bank / Cek</label><input id="pRujukan" class="field" type="text" placeholder="Pilihan"></div>
-                <div><label class="label" for="pCatatan">Catatan</label><input id="pCatatan" class="field" type="text" placeholder="Pilihan"></div>
-                <button type="submit" class="w-full rounded-xl bg-primary-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-receipt mr-1"></i> Simpan &amp; Jana Resit</button>
-              </div>
-            </form>
-            <div id="payPlaceholder" class="card p-8 text-center text-sm text-slate-400"><i class="fa-solid fa-hand-holding-dollar mb-3 block text-4xl text-slate-300"></i>Pilih pelajar untuk mula merekod bayaran. Resit rasmi akan dijana secara automatik.</div>
+              </form>
+              <div id="payPlaceholder" class="card p-8 text-center text-sm text-slate-400"><i class="fa-solid fa-hand-holding-dollar mb-3 block text-4xl text-slate-300"></i>Pilih pelajar. Bulan tertunggak dipilih secara automatik dan jumlah dikira sendiri — cuma tekan <b>Simpan</b>.</div>
+            </div>
           </div>
+        </div>
+
+        <!-- ===== Mod Pukal (ramai sekali gus) ===== -->
+        <div id="pm-bulk" class="pm-panel hidden">
+          <div id="bkSetup">
+            <div class="card p-4 md:p-5">
+              <div class="flex items-start gap-3 rounded-xl bg-primary-50 p-3 text-xs text-primary-800"><i class="fa-solid fa-lightbulb mt-0.5"></i><span>Untuk kutipan beramai-ramai: pilih jenis yuran &amp; bulan, kemudian <b>tekan nama setiap pelajar</b> yang membayar. Tiada taipan diperlukan — satu resit dijana untuk setiap pelajar sekali gus.</span></div>
+              <div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div class="col-span-2 md:col-span-1"><span class="label">Jenis Yuran</span>
+                  <div class="flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-500">
+                    <button type="button" data-bk="makan" class="bk-jenis seg-btn flex-1 rounded-lg px-2 py-2">Makan</button>
+                    <button type="button" data-bk="sekolah" class="bk-jenis seg-btn flex-1 rounded-lg px-2 py-2">Sekolah</button>
+                    <button type="button" data-bk="both" class="bk-jenis seg-btn flex-1 rounded-lg px-2 py-2">Kedua</button>
+                  </div>
+                </div>
+                <div><label class="label" for="bkMonth">Bulan</label><input id="bkMonth" type="month" class="field"></div>
+                <div><label class="label" for="bkKelas">Kelas</label><select id="bkKelas" class="field"></select></div>
+                <div class="col-span-2 md:col-span-1"><label class="label" for="bkSearch">Carian</label><input id="bkSearch" type="search" class="field" placeholder="Nama pelajar..."></div>
+              </div>
+              <div class="mt-3 grid gap-3 md:grid-cols-3">
+                <div class="md:col-span-2"><span class="label">Kaedah Bayaran</span><div id="bkKaedahChips" class="flex flex-wrap gap-2"></div></div>
+                <div><label class="label" for="bkTarikh">Tarikh Bayaran</label><input id="bkTarikh" type="date" class="field"></div>
+              </div>
+              <label class="mt-3 flex items-center gap-2 text-sm text-slate-700"><input id="bkArrears" type="checkbox" class="h-4 w-4"> Sertakan juga tunggakan bulan-bulan sebelumnya</label>
+              <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <button type="button" onclick="bulkSelectAll()" class="rounded-lg bg-primary-50 px-3 py-2 font-semibold text-primary-700"><i class="fa-solid fa-check-double mr-1"></i> Pilih semua belum bayar</button>
+                <button type="button" onclick="bulkClear()" class="rounded-lg bg-slate-100 px-3 py-2 font-semibold text-slate-600">Kosongkan</button>
+                <span id="bkInfo" class="ml-auto text-slate-500"></span>
+              </div>
+            </div>
+            <div id="bkList" class="mt-4 space-y-2 pb-28"></div>
+            <div class="bk-bar fixed inset-x-0 z-30 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(0,0,0,.08)] backdrop-blur">
+              <div class="mx-auto flex max-w-5xl items-center gap-3">
+                <div class="min-w-0 flex-1"><p class="text-xs text-slate-500"><span id="bkCount">0</span> pelajar dipilih</p><p id="bkTotal" class="text-lg font-extrabold text-primary-700">RM0.00</p></div>
+                <button id="bkSave" type="button" onclick="bulkSave()" class="rounded-xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/30 disabled:opacity-40"><i class="fa-solid fa-receipt mr-1"></i> Simpan &amp; Jana Resit</button>
+              </div>
+            </div>
+          </div>
+          <div id="bkResult" class="hidden"></div>
+        </div>
+
+        <!-- ===== Rekod & Resit ===== -->
+        <div id="pm-records" class="pm-panel hidden">
+          <div class="card p-4 md:p-5">
+            <div class="flex flex-col gap-3 md:flex-row">
+              <div class="relative flex-1">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <input id="rcSearch" class="field pl-9" type="search" placeholder="Cari nama pelajar, No. KP atau No. Resit...">
+              </div>
+              <select id="rcJenis" class="field md:w-44"><option value="all">Semua Jenis</option><option value="makan">Yuran Makan</option><option value="sekolah">Yuran Sekolah</option></select>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button data-rc="today" class="rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1">Hari Ini</button>
+              <button data-rc="week" class="rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1">7 Hari</button>
+              <button data-rc="month" class="rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1">Bulan Ini</button>
+              <button data-rc="year" class="rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1">Tahun Ini</button>
+              <button data-rc="all" class="rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1">Semua</button>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+              <p id="rcSum" class="mr-auto text-sm font-semibold text-slate-600"></p>
+              <button type="button" onclick="recSelectAll()" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600"><i class="fa-solid fa-check-double mr-1"></i> <span id="rcSelAllLbl">Pilih Semua</span></button>
+              <button id="rcBatch" type="button" onclick="recPrintSel()" disabled class="rounded-xl bg-primary-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-40"><i class="fa-solid fa-print mr-1"></i> Jana Resit Gabungan (<span id="rcSelN">0</span>)</button>
+            </div>
+            <p class="mt-2 text-[11px] text-slate-500"><i class="fa-solid fa-circle-info mr-1"></i> Tekan <b>Resit</b> untuk jana resit tunggal (lihat, cetak, PDF, WhatsApp), atau tanda beberapa rekod untuk cetak semua sekali gus.</p>
+          </div>
+          <div id="rcList" class="mt-4 space-y-2"></div>
         </div>
       </section>
 
@@ -594,13 +681,25 @@
             </div>
 
             <div data-admin class="card p-5 md:p-6">
-              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-money-bill-wave text-primary-600"></i> Kadar Yuran Lalai (Bulanan)</h3>
-              <p class="mt-1 text-xs text-slate-500">Digunakan sebagai nilai asal semasa pendaftaran pelajar baharu.</p>
+              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-sliders text-primary-600"></i> Tetapan Bayaran &amp; Resit</h3>
+              <p class="mt-1 text-xs text-slate-500">Nilai lalai ini menjadikan rekod bayaran lebih pantas — kurang pilihan, kurang taipan.</p>
               <div class="mt-4 grid grid-cols-2 gap-3">
-                <div><label class="label" for="sKadarSek">Yuran Sekolah (RM)</label><input id="sKadarSek" class="field" type="number" min="0" step="0.01"></div>
-                <div><label class="label" for="sKadarMak">Yuran Makan (RM)</label><input id="sKadarMak" class="field" type="number" min="0" step="0.01"></div>
+                <div><label class="label" for="sKadarMak">Kadar Yuran Makan (RM/bulan)</label><input id="sKadarMak" class="field" type="number" min="0" step="0.01"></div>
+                <div><label class="label" for="sKadarSek">Kadar Yuran Sekolah (RM/bulan)</label><input id="sKadarSek" class="field" type="number" min="0" step="0.01"></div>
               </div>
-              <label class="mt-3 flex items-start gap-2 text-xs text-slate-600"><input id="sApplyAll" type="checkbox" class="mt-0.5"> Kemas kini kadar untuk <b>semua pelajar sedia ada</b> juga</label>
+              <label class="mt-2 flex items-start gap-2 text-xs text-slate-600"><input id="sApplyAll" type="checkbox" class="mt-0.5"> Kemas kini kadar untuk <b>semua pelajar sedia ada</b> juga</label>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div><label class="label" for="sJenisLalai">Jenis Yuran Lalai</label><select id="sJenisLalai" class="field"><option value="makan">Yuran Makan</option><option value="sekolah">Yuran Sekolah</option><option value="both">Sekolah &amp; Makan</option></select></div>
+                <div><label class="label" for="sKaedahLalai">Kaedah Lalai</label><select id="sKaedahLalai" class="field"></select></div>
+              </div>
+              <div class="mt-4"><span class="label">Kaedah Bayaran Diterima</span><div id="sKaedahAktif" class="flex flex-wrap gap-2"></div></div>
+              <div class="mt-4"><label class="label" for="sAmaunPantas">Butang Amaun Pantas (RM, pisahkan dengan koma)</label><input id="sAmaunPantas" class="field" placeholder="50, 100, 150, 200"><p class="mt-1 text-[11px] text-slate-500">Dipaparkan sebagai butang untuk bayaran sebahagian.</p></div>
+              <div class="mt-4"><label class="label" for="sSelepas">Selepas Simpan Bayaran</label><select id="sSelepas" class="field"><option value="resit">Papar resit terus (cetak / PDF / WhatsApp)</option><option value="kekal">Kekal di skrin bayaran — sedia untuk pembayar seterusnya</option></select></div>
+              <div class="mt-4 grid grid-cols-2 gap-3">
+                <div><label class="label" for="sResitPrefix">Awalan No. Resit</label><input id="sResitPrefix" class="field uppercase" maxlength="6" placeholder="R"><p id="sResitEg" class="mt-1 text-[11px] text-slate-500"></p></div>
+                <div class="flex items-start pt-6"><label class="flex items-center gap-2 text-sm"><input id="sPaparBaki" type="checkbox" class="h-4 w-4"> Papar baki tunggakan pada resit</label></div>
+              </div>
+              <div class="mt-4"><label class="label" for="sNotaResit">Nota Kaki Resit</label><input id="sNotaResit" class="field" maxlength="160"></div>
             </div>
 
             <button data-admin id="btnSaveSettings" class="w-full rounded-xl bg-primary-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-check mr-1"></i> Simpan Semua Tetapan</button>
@@ -692,6 +791,11 @@ const DEFAULT_SETTINGS = {
   nama: 'Madrasah Misbahul Falah', alamat: '', telefon: '', emel: '', tema: 'emerald',
   letterhead: '', mudir: '', jawatan: 'Mudir', prefix: '', kadarSekolah: 100, kadarMakan: 150, seq: {}
 };
+const DEFAULT_BAYARAN = {
+  jenisLalai: 'makan', kaedahLalai: 'Tunai', kaedahAktif: ['Tunai', 'Pindahan Bank', 'DuitNow / QR'],
+  amaunPantas: '50, 100, 150, 200', selepasBayar: 'resit', resitPrefix: 'R', paparBaki: true,
+  notaResit: 'Terima kasih atas bayaran tuan/puan. Jazakallahu khairan.'
+};
 const THEME_HEX = { emerald: '#059669', blue: '#2563eb', gold: '#d97706' };
 const TAB_TITLES = { dashboard: 'Papan Pemuka', students: 'Pelajar & Waris', payment: 'Kutipan Yuran', reports: 'Laporan', settings: 'Tetapan' };
 const IDLE_LOCK_MS = 15 * 60 * 1000;
@@ -706,7 +810,6 @@ let chartMode = 'kutipan';
 const charts = {};
 let idleTimer = null;
 let loginFails = 0, loginBlockUntil = 0;
-const pay = { sid: null, jenis: 'sekolah', year: new Date().getFullYear(), sel: new Set() };
 let rpTab = 'tunggak';
 let sumYearVal = new Date().getFullYear();
 let currentDoc = null;
@@ -835,24 +938,39 @@ function normStudent(o) {
   };
 }
 function normTx(o) {
-  if (!o || typeof o !== 'object' || !JENIS[o.jenis] || !o.studentId) return null;
+  if (!o || typeof o !== 'object' || !o.studentId) return null;
+  const defJ = JENIS[o.jenis] ? o.jenis : null;
   const alokasi = (Array.isArray(o.alokasi) ? o.alokasi : [])
-    .map(a => ({ bulan: ymOf(a.bulan), amaun: num(a.amaun) })).filter(a => a.amaun > 0);
+    .map(a => ({ jenis: JENIS[a.jenis] ? a.jenis : defJ, bulan: ymOf(a.bulan), amaun: num(a.amaun) }))
+    .filter(a => a.jenis && a.amaun > 0)
+    .sort((x, y) => x.bulan.localeCompare(y.bulan) || x.jenis.localeCompare(y.jenis));
   if (!alokasi.length) return null;
+  const js = [...new Set(alokasi.map(a => a.jenis))];
   return {
     id: String(o.id || uid()), noResit: String(o.noResit || ''), studentId: String(o.studentId),
     nama: String(o.nama || ''), kp: String(o.kp || ''), kelas: String(o.kelas || ''), waris: String(o.waris || ''),
-    jenis: o.jenis, alokasi, jumlah: num(alokasi.reduce((a, b) => a + b.amaun, 0)),
+    jenis: js.length > 1 ? 'campur' : js[0], alokasi, jumlah: num(alokasi.reduce((a, b) => a + b.amaun, 0)),
     tarikh: /^\d{4}-\d{2}-\d{2}$/.test(o.tarikh) ? o.tarikh : todayStr(),
     kaedah: String(o.kaedah || 'Tunai'), rujukan: String(o.rujukan || ''), catatan: String(o.catatan || ''),
     oleh: String(o.oleh || ''), dicipta: o.dicipta || new Date().toISOString()
   };
 }
+/* Pembantu transaksi (satu resit boleh mengandungi Yuran Sekolah & Makan) */
+function txJenisList(t) { return [...new Set(t.alokasi.map(a => a.jenis))]; }
+function txLabel(t) { const l = txJenisList(t); return l.length > 1 ? 'Yuran Sekolah & Makan' : JENIS[l[0]].label; }
+function txShort(t) { const l = txJenisList(t); return l.length > 1 ? 'Sekolah & Makan' : JENIS[l[0]].short; }
+function txIcon(t) { const l = txJenisList(t); return l.length > 1 ? 'fa-layer-group' : JENIS[l[0]].icon; }
+function txDesc(t) {
+  const l = txJenisList(t);
+  return l.length === 1 ? monthsText(t.alokasi) : l.map(j => `${JENIS[j].short}: ${monthsText(t.alokasi.filter(a => a.jenis === j))}`).join(' · ');
+}
+function txAmt(t, j) { return num(t.alokasi.filter(a => a.jenis === j).reduce((x, a) => x + a.amaun, 0)); }
 
 /* ---------- Muat & Migrasi ---------- */
 function loadData() {
   DB.settings = { ...DEFAULT_SETTINGS, ...readLS(K.settings, {}) };
   if (!DB.settings.seq || typeof DB.settings.seq !== 'object') DB.settings.seq = {};
+  DB.settings.bayaran = { ...DEFAULT_BAYARAN, ...(DB.settings.bayaran || {}) };
   DB.students = (readLS(K.students, []) || []).map(normStudent).filter(Boolean);
   DB.tx = (readLS(K.tx, []) || []).map(normTx).filter(Boolean);
   DB.users = (readLS(K.users, []) || []).filter(u => u && u.username && u.hash);
@@ -861,7 +979,7 @@ function loadData() {
 function migrateV1() {
   if (localStorage.getItem(K.students) !== null) return;
   const oldS = readLS(OLD.students, null), oldSet = readLS(OLD.settings, null);
-  if (oldSet) { const { pin, ...rest } = oldSet; DB.settings = { ...DB.settings, ...rest }; }
+  if (oldSet) { const { pin, ...rest } = oldSet; DB.settings = { ...DB.settings, ...rest, bayaran: DB.settings.bayaran }; }
   if (Array.isArray(oldS) && oldS.length) {
     const r = importLegacyStudents(oldS);
     persist('settings', 'students', 'tx');
@@ -893,7 +1011,7 @@ function invalidate() { _paid = null; _arr = null; }
 function paidIdx() {
   if (_paid) return _paid;
   _paid = new Map();
-  for (const t of DB.tx) for (const a of t.alokasi) { const k = `${t.studentId}|${t.jenis}|${a.bulan}`; _paid.set(k, num((_paid.get(k) || 0) + a.amaun)); }
+  for (const t of DB.tx) for (const a of t.alokasi) { const k = `${t.studentId}|${a.jenis}|${a.bulan}`; _paid.set(k, num((_paid.get(k) || 0) + a.amaun)); }
   return _paid;
 }
 function paidFor(sid, j, ym) { return paidIdx().get(`${sid}|${j}|${ym}`) || 0; }
@@ -925,14 +1043,19 @@ function isLunas(s) { return arrears(s).jumlah <= 0.001; }
 function studentPaidTotal(sid) { return num(DB.tx.filter(t => t.studentId === sid).reduce((a, t) => a + t.jumlah, 0)); }
 
 /* ---------- Toast / Modal / Dialog ---------- */
-function toast(msg, type = 'success') {
+function toast(msg, type = 'success', action = null) {
   const cfg = { success: ['bg-emerald-600', 'fa-circle-check'], error: ['bg-rose-600', 'fa-circle-xmark'], warning: ['bg-amber-500', 'fa-triangle-exclamation'], info: ['bg-slate-800', 'fa-circle-info'] }[type] || ['bg-slate-800', 'fa-circle-info'];
   const el = document.createElement('div');
-  el.className = `toast-enter pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl ${cfg[0]} px-4 py-3 text-sm font-medium text-white shadow-xl`;
-  el.innerHTML = `<i class="fa-solid ${cfg[1]} mt-0.5"></i><span class="flex-1">${esc(msg)}</span>`;
+  el.className = `toast-enter pointer-events-auto flex w-full max-w-sm items-center gap-3 rounded-2xl ${cfg[0]} px-4 py-3 text-sm font-medium text-white shadow-xl`;
+  el.innerHTML = `<i class="fa-solid ${cfg[1]}"></i><span class="flex-1">${esc(msg)}</span>`;
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'shrink-0 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold'; b.textContent = action.label;
+    b.onclick = () => { el.remove(); action.fn(); }; el.appendChild(b);
+  }
   const wrap = $('toastWrap'); while (wrap.children.length >= 3) wrap.firstChild.remove();
   wrap.appendChild(el);
-  setTimeout(() => { el.classList.replace('toast-enter', 'toast-leave'); setTimeout(() => el.remove(), 300); }, 3400);
+  setTimeout(() => { el.classList.replace('toast-enter', 'toast-leave'); setTimeout(() => el.remove(), 300); }, action ? 7000 : 3400);
 }
 function confirmModal({ title = 'Sahkan Tindakan', message = '', okText = 'Ya, Padam', icon = 'fa-trash-can', danger = true, alertOnly = false } = {}) {
   return new Promise(resolve => {
@@ -1049,7 +1172,8 @@ function refPrefix() {
 function nextSeq(key) { DB.settings.seq[key] = (DB.settings.seq[key] || 0) + 1; return DB.settings.seq[key]; }
 function nextResitNo(save = true) {
   const y = new Date().getFullYear();
-  const no = `R${y}-${pad(nextSeq('resit' + y), 5)}`;
+  const pre = String((DB.settings.bayaran && DB.settings.bayaran.resitPrefix) || 'R').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'R';
+  const no = `${pre}${y}-${pad(nextSeq('resit' + y), 5)}`;
   if (save) persist('settings');
   return no;
 }
@@ -1118,7 +1242,8 @@ function waDiscMsg(s) {
 function waReceiptMsg(t) {
   const s = DB.students.find(x => x.id === t.studentId);
   const baki = s ? arrears(s).jumlah : 0;
-  return `Salam, ini resit bayaran ${JENIS[t.jenis].label} bulan ${monthsText(t.alokasi)} untuk ${t.nama}.\n\n*No. Resit:* ${t.noResit}\n*Jumlah:* RM${money(t.jumlah)}\n*Tarikh:* ${fmtDate(t.tarikh)}\n*Kaedah:* ${t.kaedah}\n\n${baki > 0 ? `Baki tertunggak semasa: RM${money(baki)}` : 'Alhamdulillah, tiada tunggakan yuran.'}\n\nTerima kasih atas bayaran tuan/puan. Jazakallahu khairan.\n\n${DB.settings.nama}`;
+  const what = txJenisList(t).length > 1 ? `${txLabel(t)} (${txDesc(t)})` : `${txLabel(t)} bulan ${txDesc(t)}`;
+  return `Salam, ini resit bayaran ${what} untuk ${t.nama}.\n\n*No. Resit:* ${t.noResit}\n*Jumlah:* RM${money(t.jumlah)}\n*Tarikh:* ${fmtDate(t.tarikh)}\n*Kaedah:* ${t.kaedah}\n\n${baki > 0 ? `Baki tertunggak semasa: RM${money(baki)}` : 'Alhamdulillah, tiada tunggakan yuran.'}\n\nTerima kasih atas bayaran tuan/puan. Jazakallahu khairan.\n\n${DB.settings.nama}`;
 }
 function waArrears(sid) { const s = DB.students.find(x => x.id === sid); if (!s) return; if (isLunas(s)) return toast('Pelajar ini tiada tunggakan.', 'info'); openWhatsApp(s.waris.telefon, waArrearsMsg(s)); }
 function waDisc(sid) { const s = DB.students.find(x => x.id === sid); if (!s) return; if (!s.kes) return toast('Tiada rekod disiplin.', 'info'); openWhatsApp(s.waris.telefon, waDiscMsg(s)); }
@@ -1149,8 +1274,8 @@ function renderDashboard() {
   const recent = [...DB.tx].sort((a, b) => String(b.dicipta).localeCompare(String(a.dicipta))).slice(0, 5);
   $('recentTx').innerHTML = recent.map(t => `
     <li class="flex cursor-pointer items-center gap-3 py-2.5" onclick="openReceipt('${t.id}')">
-      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700"><i class="fa-solid ${JENIS[t.jenis].icon}"></i></span>
-      <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${esc(t.nama)}</p><p class="truncate text-[11px] text-slate-500">${esc(t.noResit)} · ${esc(JENIS[t.jenis].short)} · ${esc(monthsText(t.alokasi))}</p></div>
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700"><i class="fa-solid ${txIcon(t)}"></i></span>
+      <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${esc(t.nama)}</p><p class="truncate text-[11px] text-slate-500">${esc(t.noResit)} · ${esc(txDesc(t))}</p></div>
       <span class="text-sm font-bold text-emerald-700">${rm(t.jumlah)}</span>
     </li>`).join('') || '<li class="py-6 text-center text-sm text-slate-400">Belum ada transaksi.</li>';
 
@@ -1165,7 +1290,7 @@ function renderDashChart() {
   const base = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } } } };
   if (chartMode === 'kutipan') {
     $('chartSub').textContent = `Kutipan bulanan bagi tahun ${y}`;
-    const by = j => MONTHS.map((_, i) => num(DB.tx.filter(t => t.jenis === j && t.tarikh.startsWith(ymKey(y, i + 1))).reduce((a, t) => a + t.jumlah, 0)));
+    const by = j => MONTHS.map((_, i) => num(DB.tx.filter(t => t.tarikh.startsWith(ymKey(y, i + 1))).reduce((a, t) => a + txAmt(t, j), 0)));
     data = { labels: MON, datasets: [
       { label: 'Yuran Sekolah', data: by('sekolah'), backgroundColor: cssRgb('--p-600', .9), borderRadius: 6, maxBarThickness: 34 },
       { label: 'Yuran Makan', data: by('makan'), backgroundColor: 'rgba(14,165,233,.8)', borderRadius: 6, maxBarThickness: 34 }
@@ -1253,7 +1378,7 @@ function initStudentForm() {
   $('fKelas').innerHTML = '<option value="">-- Pilih Kelas --</option>' + KELAS.map(k => `<option>${k}</option>`).join('');
   $('wHub').innerHTML = HUBUNGAN.map(h => `<option>${h}</option>`).join('');
   ['filterKelas', 'rtKelas'].forEach(id => $(id).innerHTML = '<option value="all">Semua Kelas</option>' + KELAS.map(k => `<option>${k}</option>`).join(''));
-  $('pKaedah').innerHTML = KAEDAH.map(k => `<option>${k}</option>`).join('');
+  $('bkKelas').innerHTML = '<option value="all">Semua Kelas</option>' + KELAS.map(k => `<option>${k}</option>`).join('');
 
   ['fNama', 'wNama'].forEach(id => $(id).addEventListener('input', e => upperKeepCaret(e.target)));
   $('fGuru').addEventListener('input', e => { upperKeepCaret(e.target); updateGuruPreview(); });
@@ -1401,9 +1526,10 @@ function renderProfile() {
           <div class="hidden text-right sm:block"><p class="text-xs text-white/70">Tunggakan</p><p class="text-2xl font-extrabold">${rm(a.jumlah)}</p></div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4 lg:grid-cols-7">
         ${btn(`goPay('${s.id}')`, 'fa-solid fa-cash-register', 'Terima Bayaran', 'bg-primary-600 text-white')}
         ${btn(`letterDialog('${s.id}')`, 'fa-solid fa-file-signature', 'Surat Pengesahan', 'bg-slate-800 text-white')}
+        ${btn(`statementDoc('${s.id}')`, 'fa-solid fa-file-invoice', 'Penyata Yuran', 'bg-sky-50 text-sky-700')}
         ${btn(`waArrears('${s.id}')`, 'fa-brands fa-whatsapp', 'WA Tunggakan', 'bg-emerald-50 text-emerald-700')}
         ${btn(`waDisc('${s.id}')`, 'fa-solid fa-comment-dots', 'WA Disiplin', 'bg-amber-50 text-amber-700')}
         ${btn(`openStudentForm('${s.id}')`, 'fa-solid fa-pen', 'Kemas Kini', 'bg-slate-100 text-slate-700')}
@@ -1456,13 +1582,14 @@ function renderProfile() {
 }
 function txRow(t) {
   return `<div class="flex items-center gap-3 rounded-xl border border-slate-100 p-3 hover:bg-slate-50">
-    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${t.jenis === 'makan' ? 'bg-sky-50 text-sky-700' : 'bg-primary-50 text-primary-700'}"><i class="fa-solid ${JENIS[t.jenis].icon}"></i></span>
+    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${t.jenis === 'makan' ? 'bg-sky-50 text-sky-700' : 'bg-primary-50 text-primary-700'}"><i class="fa-solid ${txIcon(t)}"></i></span>
     <div class="min-w-0 flex-1 cursor-pointer" onclick="openReceipt('${t.id}')">
       <p class="truncate text-sm font-semibold">${esc(t.nama)} <span class="font-normal text-slate-400">· ${esc(t.noResit)}</span></p>
-      <p class="truncate text-[11px] text-slate-500">${esc(JENIS[t.jenis].label)} · ${esc(monthsText(t.alokasi))} · ${fmtDate(t.tarikh)} · ${esc(t.kaedah)}</p>
+      <p class="truncate text-[11px] text-slate-500">${esc(txDesc(t))} · ${fmtDate(t.tarikh)} · ${esc(t.kaedah)}</p>
     </div>
     <span class="text-sm font-bold text-emerald-700">${rm(t.jumlah)}</span>
     <button onclick="openReceipt('${t.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600" title="Lihat resit"><i class="fa-solid fa-receipt"></i></button>
+    <button onclick="waReceipt('${t.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700" title="WhatsApp resit"><i class="fa-brands fa-whatsapp"></i></button>
     ${isAdmin() ? `<button onclick="deleteTx('${t.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600" title="Batal transaksi"><i class="fa-solid fa-trash-can"></i></button>` : ''}
   </div>`;
 }
@@ -1479,20 +1606,77 @@ async function deleteTx(id) {
 /* =====================================================================
    KUTIPAN YURAN
    ===================================================================== */
+const JENIS_OPT = { sekolah: ['sekolah'], makan: ['makan'], both: ['sekolah', 'makan'] };
+const JENIS_OPT_LABEL = { sekolah: 'Yuran Sekolah', makan: 'Yuran Makan', both: 'Yuran Sekolah & Makan' };
+let pmTab = 'single';
+function BY() { return DB.settings.bayaran; }
+function kaedahList() { const l = (BY().kaedahAktif || []).filter(k => KAEDAH.includes(k)); return l.length ? l : ['Tunai']; }
+function defaultKaedah() { return kaedahList().includes(BY().kaedahLalai) ? BY().kaedahLalai : kaedahList()[0]; }
+function amountPresets() { return [...new Set(String(BY().amaunPantas || '').split(/[,;\s]+/).map(num).filter(n => n > 0))].slice(0, 8); }
+function chip(active, label, onclick) {
+  return `<button type="button" onclick="${onclick}" class="rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${active ? 'bg-primary-600 text-white ring-primary-600' : 'bg-white text-slate-600 ring-slate-200 hover:bg-slate-50'}">${label}</button>`;
+}
+function addMonths(ym, n) { let [y, m] = ym.split('-').map(Number); m += n; y += Math.floor((m - 1) / 12); m = ((m - 1) % 12 + 12) % 12 + 1; return ymKey(y, m); }
+/* Status gabungan satu bulan bagi satu atau dua jenis yuran */
+function cellInfo(s, ym, jl) {
+  const act = jl.filter(j => monthStatus(s, j, ym) !== 'na');
+  if (!act.length) return { st: 'na', rem: 0, full: 0 };
+  const sts = act.map(j => monthStatus(s, j, ym));
+  const rem = num(act.reduce((a, j) => a + remainingFor(s, j, ym), 0));
+  const full = num(act.reduce((a, j) => a + rateOf(s, j), 0));
+  const st = sts.every(x => x === 'bayar') ? 'bayar' : sts.some(x => x === 'bayar' || x === 'sebahagian') ? 'sebahagian' : sts.includes('tunggak') ? 'tunggak' : 'akan';
+  return { st, rem, full };
+}
+function itemsFor(s, months, jl) {
+  return [...new Set(months)].sort().flatMap(ym => jl.filter(j => monthStatus(s, j, ym) !== 'na').map(j => ({ jenis: j, ym, rem: remainingFor(s, j, ym) }))).filter(x => x.rem > 0.001);
+}
+function itemsTotal(items) { return num(items.reduce((a, x) => a + x.rem, 0)); }
+function allocate(items, amount) {
+  let left = amount; const out = [];
+  for (const x of items) { if (left <= 0.001) break; const a = num(Math.min(left, x.rem)); out.push({ jenis: x.jenis, bulan: x.ym, amaun: a }); left = num(left - a); }
+  return out;
+}
+function itemsText(items) {
+  const jl = [...new Set(items.map(x => x.jenis))];
+  return jl.map(j => `${JENIS[j].short}: ${monthsText(items.filter(x => x.jenis === j).map(x => ({ bulan: x.ym })))}`).join(' · ');
+}
+function createTx(s, alokasi, extra) {
+  return normTx({ id: uid(), noResit: nextResitNo(false), studentId: s.id, nama: s.nama, kp: s.kp, kelas: s.kelas, waris: s.waris.nama, alokasi, oleh: currentUser.nama, dicipta: new Date().toISOString(), ...extra });
+}
+function switchPm(m) { pmTab = m; renderPayment(); window.scrollTo({ top: 0 }); }
+function renderPayment() {
+  document.querySelectorAll('.pm-btn').forEach(b => b.classList.toggle('active', b.dataset.pm === pmTab));
+  document.querySelectorAll('.pm-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'pm-' + pmTab));
+  if (pmTab === 'single') renderSingle(); else if (pmTab === 'bulk') renderBulk(); else renderRecords();
+}
+
+/* ----- Bayaran Pantas ----- */
+const pay = { sid: null, jenis: null, year: new Date().getFullYear(), sel: new Set(), kaedah: null };
+function payStudent() { return DB.students.find(x => x.id === pay.sid); }
+function payJl() { return JENIS_OPT[pay.jenis] || ['makan']; }
+function autoSelect(s) {
+  const jl = payJl(), a = arrears(s);
+  const due = [...new Set(jl.flatMap(j => a.bulan[j]))].sort();
+  pay.sel = new Set();
+  if (due.length) { pay.sel = new Set(due); pay.year = +due[due.length - 1].slice(0, 4); }
+  else { const c = curYM(); pay.year = +c.slice(0, 4); if (cellInfo(s, c, jl).rem > 0) pay.sel.add(c); }
+}
 function goPay(sid, jenis, ym) {
-  pay.sid = sid; pay.sel = new Set();
-  if (jenis) pay.jenis = jenis;
-  pay.year = ym ? +ym.slice(0, 4) : new Date().getFullYear();
-  if (ym) pay.sel.add(ym);
-  else {
-    const s = DB.students.find(x => x.id === sid);
-    if (s && !jenis) { const a = arrears(s); if (!a.bulan[pay.jenis].length && a.bulan[pay.jenis === 'sekolah' ? 'makan' : 'sekolah'].length) pay.jenis = pay.jenis === 'sekolah' ? 'makan' : 'sekolah'; }
-  }
+  pmTab = 'single'; pay.sid = sid; pay.jenis = jenis || BY().jenisLalai || 'makan';
+  const s = payStudent();
+  if (ym) { pay.sel = new Set([ym]); pay.year = +ym.slice(0, 4); } else if (s) autoSelect(s);
   switchTab('payment');
 }
-function renderPayment() {
-  const s = DB.students.find(x => x.id === pay.sid);
-  if (!s) pay.sid = null;
+function paySelectStudent(id) {
+  pay.sid = id; pay.jenis = pay.jenis || BY().jenisLalai || 'makan';
+  const s = payStudent(); if (s) autoSelect(s);
+  $('paySearch').value = ''; $('payResults').classList.add('hidden');
+  renderPayment();
+}
+function renderSingle() {
+  if (!pay.jenis) pay.jenis = BY().jenisLalai || 'makan';
+  if (!pay.kaedah || !kaedahList().includes(pay.kaedah)) pay.kaedah = defaultKaedah();
+  const s = payStudent(); if (!s) pay.sid = null;
   $('payPicker').classList.toggle('hidden', !!s);
   $('paySelected').classList.toggle('hidden', !s);
   $('payStep2').classList.toggle('hidden', !s);
@@ -1501,78 +1685,273 @@ function renderPayment() {
   if (!s) return;
   if (!$('pTarikh').value) $('pTarikh').value = todayStr();
   $('pTarikh').max = todayStr();
-  const a = arrears(s);
+  const a = arrears(s), jl = payJl();
   $('paySelected').innerHTML = `<div class="flex items-center gap-3 rounded-xl bg-primary-50 p-3 ring-1 ring-primary-100">
     <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">${esc(initials(s.nama))}</span>
-    <div class="min-w-0 flex-1"><p class="truncate font-bold">${esc(s.nama)}</p><p class="truncate text-xs text-slate-600">${esc(s.kelas)} · Waris: ${esc(s.waris.nama || '-')} · Tunggakan <b class="text-rose-600">${rm(a.jumlah)}</b></p></div>
-    <button onclick="pay.sid=null;pay.sel.clear();renderPayment();$('paySearch').focus()" class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Tukar</button></div>`;
+    <div class="min-w-0 flex-1"><p class="truncate font-bold">${esc(s.nama)}</p><p class="truncate text-xs text-slate-600">${esc(s.kelas)} · Waris: ${esc(s.waris.nama || '-')}</p>
+      <p class="text-xs">Tunggakan: <b class="${a.jumlah > 0 ? 'text-rose-600' : 'text-emerald-600'}">${a.jumlah > 0 ? rm(a.jumlah) : 'Tiada'}</b>${a.jumlah > 0 ? ` <span class="text-slate-500">(Makan ${rm(a.makan)} · Sekolah ${rm(a.sekolah)})</span>` : ''}</p></div>
+    <button type="button" onclick="pay.sid=null;pay.sel.clear();renderPayment();setTimeout(()=>{$('paySearch').focus();paySearchRender()},50)" class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Tukar</button></div>`;
   document.querySelectorAll('.pay-jenis').forEach(b => b.classList.toggle('active', b.dataset.jenis === pay.jenis));
   $('payYearLbl').textContent = pay.year;
-  $('payRateLbl').textContent = `${rm(rateOf(s, pay.jenis))}/bulan`;
+  $('payRateLbl').textContent = jl.map(j => `${JENIS[j].short} ${rm(rateOf(s, j))}`).join(' + ') + ' / bulan';
   $('payMonths').innerHTML = Array.from({ length: 12 }, (_, i) => {
-    const ym = ymKey(pay.year, i + 1), st = monthStatus(s, pay.jenis, ym), rem = remainingFor(s, pay.jenis, ym);
-    const dis = st === 'bayar' || st === 'na';
-    return `<button type="button" ${dis ? 'disabled' : ''} onclick="payToggle('${ym}')" class="month-cell ${pay.sel.has(ym) ? 'selected' : ''} rounded-xl p-2.5 text-center ring-1 ${ST[st].cell} ${dis ? 'cursor-not-allowed opacity-70' : 'hover:brightness-95'}">
-      <p class="text-xs font-bold">${MON[i]}</p><i class="fa-solid ${pay.sel.has(ym) ? 'fa-square-check' : ST[st].icon} my-1"></i>
-      <p class="text-[10px] leading-tight">${st === 'na' ? 'Tiada' : st === 'bayar' ? 'Telah Bayar' : 'Baki ' + money(rem)}</p></button>`;
+    const ym = ymKey(pay.year, i + 1), c = cellInfo(s, ym, jl), on = pay.sel.has(ym);
+    const dis = c.st === 'bayar' || c.st === 'na';
+    return `<button type="button" ${dis ? 'disabled' : ''} onclick="payToggle('${ym}')" class="month-cell ${on ? 'selected' : ''} rounded-xl p-2.5 text-center ring-1 ${ST[c.st].cell} ${dis ? 'cursor-not-allowed opacity-70' : 'hover:brightness-95'}">
+      <p class="text-xs font-bold">${MON[i]}</p><i class="fa-solid ${on ? 'fa-square-check' : ST[c.st].icon} my-1"></i>
+      <p class="text-[10px] leading-tight">${c.st === 'na' ? 'Tiada' : c.st === 'bayar' ? 'Telah Bayar' : rm(c.rem)}</p></button>`;
   }).join('');
+  $('pKaedahChips').innerHTML = kaedahList().map(k => chip(k === pay.kaedah, esc(k), `pay.kaedah='${k}';renderSingle()`)).join('');
   updatePaySummary(true);
 }
-function payToggle(ym) { pay.sel.has(ym) ? pay.sel.delete(ym) : pay.sel.add(ym); renderPayment(); }
-function payYear(d) { pay.year += d; renderPayment(); }
-function payClearSel() { pay.sel.clear(); renderPayment(); }
-function paySelectDue() {
-  const s = DB.students.find(x => x.id === pay.sid); if (!s) return;
-  const due = arrears(s).bulan[pay.jenis];
-  if (!due.length) return toast(`Tiada tunggakan ${JENIS[pay.jenis].label.toLowerCase()}.`, 'info');
-  pay.sel = new Set(due); pay.year = +due[0].slice(0, 4); renderPayment();
-}
-function selectedRemaining(s) { return [...pay.sel].sort().map(ym => ({ ym, rem: remainingFor(s, pay.jenis, ym) })).filter(x => x.rem > 0); }
+function payItems() { const s = payStudent(); return s ? itemsFor(s, [...pay.sel], payJl()) : []; }
 function updatePaySummary(resetAmount) {
-  const s = DB.students.find(x => x.id === pay.sid); if (!s) return;
-  const items = selectedRemaining(s);
-  const total = num(items.reduce((a, x) => a + x.rem, 0));
+  const items = payItems(), total = itemsTotal(items);
   if (resetAmount) $('pAmaun').value = total ? total.toFixed(2) : '';
   $('paySummary').innerHTML = items.length
-    ? `<p class="font-semibold">${esc(JENIS[pay.jenis].label)} · ${items.length} bulan</p><p class="mt-1 text-xs text-slate-600">${esc(monthsText(items.map(x => ({ bulan: x.ym }))))}</p><p class="mt-2 flex justify-between border-t border-slate-200 pt-2"><span>Jumlah baki dipilih</span><b>${rm(total)}</b></p>`
-    : '<p class="text-center text-xs text-slate-500">Pilih sekurang-kurangnya satu bulan.</p>';
+    ? `<p class="font-semibold">${esc(JENIS_OPT_LABEL[pay.jenis])}</p><p class="mt-1 text-xs text-slate-600">${esc(itemsText(items))}</p><p class="mt-2 flex justify-between border-t border-slate-200 pt-2"><span>Jumlah perlu dibayar</span><b>${rm(total)}</b></p>`
+    : '<p class="text-center text-xs text-slate-500"><i class="fa-solid fa-hand-pointer mr-1"></i> Tekan bulan di sebelah, atau guna butang pantas.</p>';
+  const chips = [chip(false, `Penuh ${rm(total)}`, `setPayAmt(${total})`)].concat(amountPresets().filter(v => v < total).map(v => chip(false, rm(v), `setPayAmt(${v})`)));
+  $('pAmaunChips').innerHTML = total ? chips.join('') : '';
+  updatePayBtn();
+}
+function setPayAmt(v) { $('pAmaun').value = num(v).toFixed(2); $('pAmaun').classList.remove('invalid'); updatePayBtn(); }
+function updatePayBtn() {
+  const v = num($('pAmaun').value), total = itemsTotal(payItems());
+  $('paySubmit').querySelector('span').textContent = v > 0 ? `Simpan ${rm(v)}${total && v < total - 0.001 ? ' (sebahagian)' : ''} & Jana Resit` : 'Simpan & Jana Resit';
+}
+function payToggle(ym) { pay.sel.has(ym) ? pay.sel.delete(ym) : pay.sel.add(ym); renderSingle(); }
+function payYear(d) { pay.year += d; renderSingle(); }
+function payClearSel() { pay.sel.clear(); renderSingle(); }
+function paySelectDue() {
+  const s = payStudent(); if (!s) return;
+  const a = arrears(s), due = [...new Set(payJl().flatMap(j => a.bulan[j]))].sort();
+  if (!due.length) return toast(`Tiada tunggakan ${JENIS_OPT_LABEL[pay.jenis].toLowerCase()}.`, 'info');
+  pay.sel = new Set(due); pay.year = +due[due.length - 1].slice(0, 4); renderSingle();
+}
+function payPickThisMonth() {
+  const s = payStudent(); if (!s) return;
+  const c = curYM();
+  if (cellInfo(s, c, payJl()).rem <= 0) return toast(`${MONTHS[new Date().getMonth()]} telah dijelaskan / tidak dikenakan.`, 'info');
+  pay.sel = new Set([c]); pay.year = +c.slice(0, 4); renderSingle();
+}
+function payAddNext() {
+  const s = payStudent(); if (!s) return;
+  const start = [curYM(), regYM(s)].sort().pop();
+  for (const ym of ymRange(start, addMonths(curYM(), 36))) {
+    if (!pay.sel.has(ym) && cellInfo(s, ym, payJl()).rem > 0) { pay.sel.add(ym); pay.year = +ym.slice(0, 4); return renderSingle(); }
+  }
+  toast('Tiada bulan lagi untuk ditambah.', 'info');
 }
 function paySearchRender() {
   const q = $('paySearch').value.trim().toUpperCase(), qd = q.replace(/\D/g, '');
   const box = $('payResults');
-  if (!q) return box.classList.add('hidden');
-  const res = DB.students.filter(s => s.nama.includes(q) || s.waris.nama.includes(q) || (qd.length >= 3 && s.kp.replace(/\D/g, '').includes(qd))).slice(0, 8);
-  box.innerHTML = res.map(s => `<button type="button" onclick="pay.sid='${s.id}';pay.sel.clear();$('paySearch').value='';$('payResults').classList.add('hidden');renderPayment()" class="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-slate-50">
+  let res, head = '';
+  if (!q) {
+    res = DB.students.map(s => ({ s, a: arrears(s) })).filter(x => x.a.jumlah > 0).sort((a, b) => b.a.jumlah - a.a.jumlah).slice(0, 8).map(x => x.s);
+    if (!res.length) res = [...DB.students].sort((a, b) => a.nama.localeCompare(b.nama)).slice(0, 8);
+    head = `<p class="px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wide text-slate-400">${DB.students.some(s => !isLunas(s)) ? 'Pelajar tertunggak' : 'Pelajar'}</p>`;
+  } else res = DB.students.filter(s => s.nama.includes(q) || s.waris.nama.includes(q) || (qd.length >= 3 && s.kp.replace(/\D/g, '').includes(qd))).slice(0, 10);
+  if (!res.length && !q) return box.classList.add('hidden');
+  box.innerHTML = head + (res.map(s => `<button type="button" onclick="paySelectStudent('${s.id}')" class="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-slate-50">
       <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xs font-bold text-primary-700">${esc(initials(s.nama))}</span>
-      <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">${esc(s.nama)}</span><span class="block text-[11px] text-slate-500">${esc(s.kp)} · ${esc(s.kelas)}</span></span>
-      <span class="text-xs font-bold ${isLunas(s) ? 'text-emerald-600' : 'text-rose-600'}">${isLunas(s) ? 'Lunas' : rm(arrears(s).jumlah)}</span></button>`).join('') || '<p class="p-4 text-center text-sm text-slate-400">Tiada pelajar sepadan.</p>';
+      <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">${esc(s.nama)}</span><span class="block text-[11px] text-slate-500">${esc(s.kelas)} · ${esc(s.waris.nama || s.kp)}</span></span>
+      <span class="text-xs font-bold ${isLunas(s) ? 'text-emerald-600' : 'text-rose-600'}">${isLunas(s) ? 'Lunas' : rm(arrears(s).jumlah)}</span></button>`).join('') || '<p class="p-4 text-center text-sm text-slate-400">Tiada pelajar sepadan.</p>');
   box.classList.remove('hidden');
 }
 function submitPayment(e) {
   e.preventDefault();
-  const s = DB.students.find(x => x.id === pay.sid); if (!s) return;
-  const items = selectedRemaining(s);
-  const amount = num($('pAmaun').value);
-  const total = num(items.reduce((a, x) => a + x.rem, 0));
+  const s = payStudent(); if (!s) return;
+  const items = payItems(), total = itemsTotal(items), amount = num($('pAmaun').value);
   if (!items.length) return toast('Sila pilih bulan yang hendak dibayar.', 'error');
   if (amount <= 0) { $('pAmaun').classList.add('invalid'); return toast('Jumlah bayaran tidak sah.', 'error'); }
-  if (amount > total + 0.001) { $('pAmaun').classList.add('invalid'); return toast(`Jumlah melebihi baki bulan dipilih (${rm(total)}). Pilih lebih banyak bulan.`, 'error'); }
+  if (amount > total + 0.001) { $('pAmaun').classList.add('invalid'); return toast(`Jumlah melebihi ${rm(total)}. Tekan "Tambah 1 Bulan" untuk bayar pendahuluan.`, 'error'); }
   const tarikh = $('pTarikh').value || todayStr();
   if (tarikh > todayStr()) return toast('Tarikh bayaran tidak boleh pada masa hadapan.', 'error');
-  $('pAmaun').classList.remove('invalid');
-  let left = amount; const alokasi = [];
-  for (const x of items) { if (left <= 0.001) break; const a = num(Math.min(left, x.rem)); alokasi.push({ bulan: x.ym, amaun: a }); left = num(left - a); }
-  const t = normTx({
-    id: uid(), noResit: nextResitNo(false), studentId: s.id, nama: s.nama, kp: s.kp, kelas: s.kelas, waris: s.waris.nama,
-    jenis: pay.jenis, alokasi, tarikh, kaedah: $('pKaedah').value, rujukan: $('pRujukan').value.trim(), catatan: $('pCatatan').value.trim(),
-    oleh: currentUser.nama, dicipta: new Date().toISOString()
-  });
+  const t = createTx(s, allocate(items, amount), { tarikh, kaedah: pay.kaedah, rujukan: $('pRujukan').value.trim(), catatan: $('pCatatan').value.trim() });
   DB.tx.push(t);
   if (!persist('tx', 'settings')) { DB.tx.pop(); return; }
-  toast(`Bayaran ${rm(t.jumlah)} direkodkan. Resit ${t.noResit} dijana.`, 'success');
-  pay.sel.clear(); $('pRujukan').value = ''; $('pCatatan').value = ''; $('pTarikh').value = todayStr();
-  renderPayment();
-  openReceipt(t.id);
+  $('pRujukan').value = ''; $('pCatatan').value = ''; $('pTarikh').value = todayStr();
+  if (BY().selepasBayar === 'kekal') {
+    pay.sid = null; pay.sel.clear(); renderSingle();
+    toast(`${rm(t.jumlah)} diterima daripada ${s.nama}. Resit ${t.noResit}.`, 'success', { label: 'Lihat Resit', fn: () => openReceipt(t.id) });
+    setTimeout(() => { $('paySearch').focus(); paySearchRender(); }, 100);
+  } else {
+    toast(`Bayaran ${rm(t.jumlah)} direkodkan. Resit ${t.noResit} dijana.`, 'success');
+    pay.sel.clear(); renderSingle(); openReceipt(t.id);
+  }
+}
+
+/* ----- Mod Pukal ----- */
+const bulk = { jenis: null, ym: null, sel: new Map(), kaedah: null, result: null, sent: new Set() };
+function bulkItems(s) {
+  const months = $('bkArrears').checked ? [...ymRange(regYM(s), bulk.ym)] : [bulk.ym];
+  return itemsFor(s, months, JENIS_OPT[bulk.jenis]);
+}
+function bulkRows() {
+  const k = $('bkKelas').value, q = $('bkSearch').value.trim().toUpperCase();
+  return DB.students.filter(s => (k === 'all' || s.kelas === k) && (!q || s.nama.includes(q) || s.waris.nama.includes(q)))
+    .map(s => { const items = bulkItems(s); return { s, items, full: itemsTotal(items), c: cellInfo(s, bulk.ym, JENIS_OPT[bulk.jenis]) }; })
+    .sort((a, b) => (a.full > 0 ? 0 : 1) - (b.full > 0 ? 0 : 1) || a.s.nama.localeCompare(b.s.nama));
+}
+function renderBulk() {
+  if (!bulk.jenis) bulk.jenis = BY().jenisLalai || 'makan';
+  if (!bulk.ym) bulk.ym = curYM();
+  if (!bulk.kaedah || !kaedahList().includes(bulk.kaedah)) bulk.kaedah = defaultKaedah();
+  if (!$('bkMonth').value) $('bkMonth').value = bulk.ym;
+  if (!$('bkTarikh').value) { $('bkTarikh').value = todayStr(); $('bkTarikh').max = todayStr(); }
+  $('bkSetup').classList.toggle('hidden', !!bulk.result);
+  $('bkResult').classList.toggle('hidden', !bulk.result);
+  if (bulk.result) return renderBulkResult();
+  document.querySelectorAll('.bk-jenis').forEach(b => b.classList.toggle('active', b.dataset.bk === bulk.jenis));
+  $('bkKaedahChips').innerHTML = kaedahList().map(k => chip(k === bulk.kaedah, esc(k), `bulk.kaedah='${k}';renderBulk()`)).join('');
+  const rows = bulkRows();
+  const unpaid = rows.filter(r => r.full > 0).length;
+  $('bkInfo').textContent = `${unpaid} belum bayar · ${rows.length - unpaid} selesai · ${ymLabel(bulk.ym)}`;
+  $('bkList').innerHTML = rows.map(r => {
+    const on = bulk.sel.has(r.s.id), custom = bulk.sel.get(r.s.id);
+    const done = r.full <= 0;
+    return `<div onclick="bulkToggle('${r.s.id}')" class="card flex cursor-pointer select-none items-center gap-3 p-3 transition ${on ? 'bg-primary-50 ring-2 ring-primary-500' : ''} ${done ? 'cursor-default opacity-60' : 'active:scale-[.99]'}">
+      <i class="fa-solid ${done ? 'fa-circle-check text-emerald-500' : on ? 'fa-square-check text-primary-600' : 'fa-square text-slate-300'} text-2xl"></i>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-bold">${esc(r.s.nama)}</p>
+        <p class="truncate text-[11px] text-slate-500">${esc(r.s.kelas)} · <span class="rounded-full px-1.5 py-0.5 font-semibold ${ST[r.c.st].badge}">${ST[r.c.st].label}</span>${r.items.length > 1 ? ` · ${esc(itemsText(r.items))}` : ''}</p>
+      </div>
+      ${done ? '<span class="text-xs font-bold text-emerald-600">Selesai</span>'
+        : on ? `<input type="number" step="0.01" min="0" inputmode="decimal" value="${(custom ?? r.full).toFixed(2)}" onclick="event.stopPropagation()" oninput="bulkAmt('${r.s.id}',this.value,${r.full})" class="field w-24 px-2 py-1.5 text-right text-sm font-bold" title="Ubah untuk bayaran sebahagian">`
+        : `<span class="text-sm font-bold text-slate-700">${rm(r.full)}</span>`}
+    </div>`;
+  }).join('') || '<div class="card p-10 text-center text-sm text-slate-400">Tiada pelajar sepadan.</div>';
+  updateBulkBar();
+}
+function bulkToggle(id) {
+  const s = DB.students.find(x => x.id === id); if (!s || itemsTotal(bulkItems(s)) <= 0) return;
+  bulk.sel.has(id) ? bulk.sel.delete(id) : bulk.sel.set(id, null);
+  renderBulk();
+}
+function bulkAmt(id, v, full) { const n = num(v); bulk.sel.set(id, Math.abs(n - full) < 0.001 ? null : n); updateBulkBar(); }
+function bulkSelectAll() { bulkRows().filter(r => r.full > 0).forEach(r => { if (!bulk.sel.has(r.s.id)) bulk.sel.set(r.s.id, null); }); renderBulk(); }
+function bulkClear() { bulk.sel.clear(); renderBulk(); }
+function bulkEntries() {
+  return [...bulk.sel.entries()].map(([id, custom]) => {
+    const s = DB.students.find(x => x.id === id); if (!s) return null;
+    const items = bulkItems(s), full = itemsTotal(items);
+    return { s, items, full, amount: custom == null ? full : custom };
+  }).filter(x => x && x.full > 0);
+}
+function updateBulkBar() {
+  const e = bulkEntries();
+  $('bkCount').textContent = e.length;
+  $('bkTotal').textContent = rm(e.reduce((a, x) => a + x.amount, 0));
+  $('bkSave').disabled = !e.length;
+}
+async function bulkSave() {
+  const e = bulkEntries(); if (!e.length) return;
+  const bad = e.find(x => x.amount <= 0 || x.amount > x.full + 0.001);
+  if (bad) return toast(`Jumlah untuk ${bad.s.nama} tidak sah (maksimum ${rm(bad.full)}).`, 'error');
+  const tarikh = $('bkTarikh').value || todayStr();
+  if (tarikh > todayStr()) return toast('Tarikh bayaran tidak boleh pada masa hadapan.', 'error');
+  const total = e.reduce((a, x) => a + x.amount, 0);
+  const ok = await confirmModal({ title: 'Simpan Kutipan Pukal?', icon: 'fa-users-line', danger: false, okText: 'Ya, Simpan',
+    message: `<b>${e.length}</b> bayaran ${esc(JENIS_OPT_LABEL[bulk.jenis])} berjumlah <b>${rm(total)}</b> (${esc(bulk.kaedah)}) akan direkodkan dan <b>${e.length} resit</b> dijana.` });
+  if (!ok) return;
+  const created = e.map(x => createTx(x.s, allocate(x.items, x.amount), { tarikh, kaedah: bulk.kaedah, catatan: 'Kutipan pukal' }));
+  DB.tx.push(...created);
+  if (!persist('tx', 'settings')) { DB.tx.splice(DB.tx.length - created.length); return; }
+  bulk.result = created.map(t => t.id); bulk.sent = new Set(); bulk.sel.clear();
+  toast(`${created.length} bayaran direkodkan. ${created.length} resit dijana.`, 'success');
+  renderBulk(); window.scrollTo({ top: 0 });
+}
+function renderBulkResult() {
+  const list = bulk.result.map(id => DB.tx.find(t => t.id === id)).filter(Boolean);
+  const total = list.reduce((a, t) => a + t.jumlah, 0);
+  $('bkResult').innerHTML = `
+    <div class="card overflow-hidden">
+      <div class="bg-gradient-to-r from-emerald-600 to-emerald-500 p-5 text-white">
+        <p class="text-sm text-white/80"><i class="fa-solid fa-circle-check mr-1"></i> Kutipan pukal berjaya</p>
+        <p class="mt-1 text-2xl font-extrabold">${list.length} resit · ${rm(total)}</p>
+        <p class="text-xs text-white/80">${esc(list[0] ? list[0].noResit : '')}${list.length > 1 ? ' hingga ' + esc(list[list.length - 1].noResit) : ''}</p>
+      </div>
+      <div class="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3">
+        <button onclick="openReceiptsBatch(bulk.result,'Resit Kutipan Pukal')" class="rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white"><i class="fa-solid fa-print mr-1"></i> Cetak / PDF Semua Resit</button>
+        <button onclick="bulkWaNext()" class="rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp Waris Seterusnya</button>
+        <button onclick="bulk.result=null;renderBulk()" class="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700"><i class="fa-solid fa-plus mr-1"></i> Kutipan Baharu</button>
+      </div>
+      <p class="px-4 pb-3 text-[11px] text-slate-500"><i class="fa-solid fa-circle-info mr-1"></i> Tekan "WhatsApp Waris Seterusnya" berulang kali — setiap tekanan membuka chat waris berikutnya dengan mesej resit siap ditulis.</p>
+    </div>
+    <div class="mt-4 space-y-2">${list.map(t => {
+      const sent = bulk.sent.has(t.id);
+      return `<div class="card flex items-center gap-3 p-3">
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-bold">${esc(t.nama)}</p><p class="truncate text-[11px] text-slate-500">${esc(t.noResit)} · ${esc(txDesc(t))}</p></div>
+        <span class="text-sm font-bold text-emerald-700">${rm(t.jumlah)}</span>
+        <button onclick="openReceipt('${t.id}')" class="rounded-lg bg-slate-100 px-2.5 py-2 text-xs font-semibold text-slate-700"><i class="fa-solid fa-receipt"></i><span class="ml-1 hidden sm:inline">Resit</span></button>
+        <button onclick="bulkWa('${t.id}')" class="rounded-lg px-2.5 py-2 text-xs font-semibold ${sent ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-700'}"><i class="fa-${sent ? 'solid fa-check' : 'brands fa-whatsapp'}"></i><span class="ml-1 hidden sm:inline">${sent ? 'Dihantar' : 'WhatsApp'}</span></button>
+      </div>`;
+    }).join('')}</div>`;
+}
+function bulkWa(id) { waReceipt(id); bulk.sent.add(id); renderBulkResult(); }
+function bulkWaNext() {
+  const next = bulk.result.find(id => !bulk.sent.has(id));
+  if (!next) return toast('Semua waris telah dihantar mesej.', 'success');
+  bulkWa(next);
+}
+
+/* ----- Rekod & Resit ----- */
+const rec = { period: 'month', sel: new Set() };
+function dateStr(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function recFiltered() {
+  const td = todayStr(); let from = '0000-00-00';
+  if (rec.period === 'today') from = td;
+  else if (rec.period === 'week') { const d = new Date(); d.setDate(d.getDate() - 6); from = dateStr(d); }
+  else if (rec.period === 'month') from = curYM() + '-01';
+  else if (rec.period === 'year') from = new Date().getFullYear() + '-01-01';
+  const j = $('rcJenis').value, q = $('rcSearch').value.trim().toUpperCase(), qd = q.replace(/\D/g, '');
+  return DB.tx.filter(t => t.tarikh >= from && (j === 'all' || txJenisList(t).includes(j)) &&
+      (!q || t.nama.includes(q) || t.noResit.toUpperCase().includes(q) || (qd.length >= 3 && t.kp.replace(/\D/g, '').includes(qd))))
+    .sort((a, b) => (b.tarikh + b.dicipta).localeCompare(a.tarikh + a.dicipta));
+}
+function renderRecords() {
+  document.querySelectorAll('.rc-period').forEach(b => {
+    const on = b.dataset.rc === rec.period;
+    b.className = `rc-period rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${on ? 'bg-primary-600 text-white ring-primary-600' : 'bg-white text-slate-600 ring-slate-200'}`;
+  });
+  const list = recFiltered();
+  const ids = new Set(list.map(t => t.id));
+  [...rec.sel].forEach(id => { if (!DB.tx.some(t => t.id === id)) rec.sel.delete(id); });
+  $('rcSum').innerHTML = `${list.length} resit · <span class="text-emerald-700">${rm(list.reduce((a, t) => a + t.jumlah, 0))}</span>`;
+  $('rcSelN').textContent = rec.sel.size;
+  $('rcBatch').disabled = !rec.sel.size;
+  $('rcSelAllLbl').textContent = list.length && list.every(t => rec.sel.has(t.id)) ? 'Nyahpilih' : 'Pilih Semua';
+  $('rcList').innerHTML = list.map(t => {
+    const on = rec.sel.has(t.id);
+    return `<div class="card flex items-center gap-3 p-3 ${on ? 'ring-2 ring-primary-500' : ''}">
+      <button onclick="recToggle('${t.id}')" class="text-xl ${on ? 'text-primary-600' : 'text-slate-300'}" aria-label="Pilih"><i class="fa-solid ${on ? 'fa-square-check' : 'fa-square'}"></i></button>
+      <div class="min-w-0 flex-1 cursor-pointer" onclick="openReceipt('${t.id}')">
+        <p class="truncate text-sm font-bold">${esc(t.nama)}</p>
+        <p class="truncate text-[11px] text-slate-500"><b>${esc(t.noResit)}</b> · ${fmtDate(t.tarikh)} · ${esc(txShort(t))} · ${esc(txDesc(t))}</p>
+      </div>
+      <span class="hidden text-sm font-bold text-emerald-700 sm:inline">${rm(t.jumlah)}</span>
+      <button onclick="openReceipt('${t.id}')" class="rounded-lg bg-primary-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-receipt"></i><span class="ml-1">Resit</span></button>
+      <button onclick="waReceipt('${t.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700" title="WhatsApp waris"><i class="fa-brands fa-whatsapp"></i></button>
+      ${isAdmin() ? `<button onclick="deleteTx('${t.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600" title="Batal"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
+    </div>`;
+  }).join('') || '<div class="card p-10 text-center text-sm text-slate-400"><i class="fa-solid fa-receipt mb-2 block text-3xl text-slate-300"></i>Tiada resit dalam tempoh ini.</div>';
+}
+function recToggle(id) { rec.sel.has(id) ? rec.sel.delete(id) : rec.sel.add(id); renderRecords(); }
+function recSelectAll() {
+  const list = recFiltered();
+  if (list.length && list.every(t => rec.sel.has(t.id))) list.forEach(t => rec.sel.delete(t.id)); else list.forEach(t => rec.sel.add(t.id));
+  renderRecords();
+}
+function recPrintSel() {
+  const ids = DB.tx.filter(t => rec.sel.has(t.id)).sort((a, b) => a.noResit.localeCompare(b.noResit)).map(t => t.id);
+  if (ids.length) openReceiptsBatch(ids, `Resit Gabungan (${ids.length})`);
+}
+function waReceipt(id) {
+  const t = DB.tx.find(x => x.id === id); if (!t) return;
+  const s = DB.students.find(x => x.id === t.studentId);
+  if (!s) return toast('Rekod pelajar tiada (telah dipadam).', 'error');
+  openWhatsApp(s.waris.telefon, waReceiptMsg(t));
 }
 
 /* =====================================================================
@@ -1622,6 +2001,7 @@ async function buildPdf() {
   const clone = page.cloneNode(true);
   clone.classList.add('pdf-mode'); clone.style.transform = 'none';
   const srcImgs = page.querySelectorAll('img');
+  clone.querySelectorAll('.no-print').forEach(el => el.remove());
   clone.querySelectorAll('img').forEach((im, i) => { const o = srcImgs[i]; if (!o || !o.complete || !o.naturalWidth || o.style.display === 'none') im.remove(); });
   const holder = document.createElement('div');
   holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff';
@@ -1669,15 +2049,14 @@ async function sharePdf() {
 function docWhatsApp() { if (currentDoc && currentDoc.share) openWhatsApp(currentDoc.share.tel, currentDoc.share.text); }
 
 /* ----- Resit ----- */
-function openReceipt(txId) {
-  const t = DB.tx.find(x => x.id === txId); if (!t) return toast('Transaksi tidak dijumpai.', 'error');
+function receiptHtml(t) {
   const s = DB.students.find(x => x.id === t.studentId);
-  const baki = s ? arrears(s) : null;
-  const rows = [...t.alokasi].sort((a, b) => a.bulan.localeCompare(b.bulan)).map((a, i) => {
-    const full = s ? rateOf(s, t.jenis) : a.amaun;
-    return `<tr><td style="text-align:center">${i + 1}</td><td>${esc(JENIS[t.jenis].label)} — ${esc(ymLabel(a.bulan))}${a.amaun < full - 0.001 ? ' <i>(sebahagian)</i>' : ''}</td><td class="t-right">${money(a.amaun)}</td></tr>`;
+  const baki = s && BY().paparBaki ? arrears(s) : null;
+  const rows = t.alokasi.map((a, i) => {
+    const full = s ? rateOf(s, a.jenis) : a.amaun;
+    return `<tr><td style="text-align:center">${i + 1}</td><td>${esc(JENIS[a.jenis].label)} — ${esc(ymLabel(a.bulan))}${a.amaun < full - 0.001 ? ' <i>(sebahagian)</i>' : ''}</td><td class="t-right">${money(a.amaun)}</td></tr>`;
   }).join('');
-  const html = `${docHeader()}${docRule()}
+  return `${docHeader()}${docRule()}
     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px">
       <div style="font-size:17px;font-weight:800;letter-spacing:.2em">RESIT RASMI</div>
       <div style="text-align:right;font-size:12px"><div><b>No. Resit:</b> ${esc(t.noResit)}</div><div><b>Tarikh:</b> ${fmtDate(t.tarikh)}</div></div>
@@ -1697,12 +2076,24 @@ function openReceipt(txId) {
       ${t.catatan ? `<tr><th>Catatan</th><td>${esc(t.catatan)}</td></tr>` : ''}
       ${baki ? `<tr><th>Baki Tertunggak Semasa</th><td><b style="color:${baki.jumlah > 0 ? '#be123c' : '#047857'}">${baki.jumlah > 0 ? rm(baki.jumlah) + ` (Sekolah ${rm(baki.sekolah)} · Makan ${rm(baki.makan)})` : 'TIADA — Alhamdulillah'}</b></td></tr>` : ''}
     </table>
-    <div class="avoid-break" style="display:flex;justify-content:space-between;margin-top:40px;font-size:11.5px">
+    ${BY().notaResit ? `<p style="margin-top:12px;text-align:center;font-weight:600;color:#334155">${esc(BY().notaResit)}</p>` : ''}
+    <div class="avoid-break" style="display:flex;justify-content:space-between;margin-top:34px;font-size:11.5px">
       <div style="width:45%"><div style="height:44px"></div><div style="border-top:1px solid #64748b;padding-top:4px"><b>Diterima oleh:</b> ${esc(t.oleh || '-')}<br>Cop Rasmi Madrasah</div></div>
       <div style="width:45%;text-align:right;color:#64748b;font-size:10.5px;align-self:flex-end">Resit ini dijana oleh komputer dan sah tanpa tandatangan.</div>
     </div>
     ${docFooter(esc(DB.settings.nama))}`;
-  openDoc({ title: `Resit ${t.noResit}`, html, filename: `Resit_${t.noResit}_${t.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: s ? { tel: s.waris.telefon, text: waReceiptMsg(t) } : null });
+}
+function openReceipt(txId) {
+  const t = DB.tx.find(x => x.id === txId); if (!t) return toast('Transaksi tidak dijumpai.', 'error');
+  const s = DB.students.find(x => x.id === t.studentId);
+  openDoc({ title: `Resit ${t.noResit}`, html: receiptHtml(t), filename: `Resit_${t.noResit}_${t.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: s ? { tel: s.waris.telefon, text: waReceiptMsg(t) } : null });
+}
+function openReceiptsBatch(ids, title = 'Resit Gabungan') {
+  const list = ids.map(id => DB.tx.find(t => t.id === id)).filter(Boolean);
+  if (!list.length) return toast('Tiada resit dipilih.', 'warning');
+  if (list.length === 1) return openReceipt(list[0].id);
+  const html = list.map((t, i) => `<div style="${i < list.length - 1 ? 'page-break-after:always;break-after:page;' : ''}">${receiptHtml(t)}</div>${i < list.length - 1 ? '<div class="no-print" style="border-top:3px dashed #94a3b8;margin:28px -14mm"></div>' : ''}`).join('');
+  openDoc({ title: `${title} · ${list.length} resit`, html, filename: `Resit_Gabungan_${list.length}_${todayStr()}.pdf` });
 }
 
 /* ----- Surat Pengesahan Pelajar ----- */
@@ -1755,6 +2146,27 @@ function openLetter(s, o) {
   openDoc({ title: 'Surat Pengesahan Pelajar', html, filename: `Surat_Pengesahan_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf` });
 }
 
+/* ----- Penyata Yuran Pelajar ----- */
+function statementDoc(sid) {
+  const s = DB.students.find(x => x.id === sid); if (!s) return;
+  const y = profileYear, a = arrears(s);
+  const cell = (j, ym) => { const st = monthStatus(s, j, ym); if (st === 'na') return '<td class="t-right">-</td><td class="t-right">-</td><td>-</td>';
+    const col = { bayar: '#047857', sebahagian: '#b45309', tunggak: '#be123c', akan: '#64748b' }[st];
+    return `<td class="t-right">${money(rateOf(s, j))}</td><td class="t-right">${money(paidFor(s.id, j, ym))}</td><td style="color:${col};font-weight:700">${ST[st].label}</td>`; };
+  const rows = MONTHS.map((m, i) => { const ym = ymKey(y, i + 1); return `<tr><td>${m}</td>${cell('makan', ym)}${cell('sekolah', ym)}</tr>`; }).join('');
+  const txs = DB.tx.filter(t => t.studentId === s.id && t.alokasi.some(x => x.bulan.startsWith(y + '-'))).sort((p, q) => p.tarikh.localeCompare(q.tarikh));
+  const html = reportShell(`Penyata Yuran Pelajar ${y}`, `${esc(s.nama)} · ${esc(s.kp)} · ${esc(s.kelas)}`, `
+    <table class="d-table kv" style="margin-top:12px"><tr><th>Nama Waris</th><td>${esc(s.waris.nama || '-')} (${esc(s.waris.hubungan)}) · ${esc(s.waris.telefon)}</td></tr>
+      <tr><th>Jumlah Tertunggak Semasa</th><td><b style="color:${a.jumlah > 0 ? '#be123c' : '#047857'}">${a.jumlah > 0 ? rm(a.jumlah) + ` (Makan ${rm(a.makan)} · Sekolah ${rm(a.sekolah)})` : 'TIADA'}</b></td></tr></table>
+    <div class="d-section">Status Bulanan ${y}</div>
+    <table class="d-table" style="font-size:10.5px"><thead><tr><th rowspan="2">Bulan</th><th colspan="3" style="text-align:center">Yuran Makan</th><th colspan="3" style="text-align:center">Yuran Sekolah</th></tr>
+      <tr><th class="t-right">Kadar</th><th class="t-right">Dibayar</th><th>Status</th><th class="t-right">Kadar</th><th class="t-right">Dibayar</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="d-section">Senarai Resit</div>
+    <table class="d-table" style="font-size:10.5px"><thead><tr><th>Tarikh</th><th>No. Resit</th><th>Butiran</th><th>Kaedah</th><th class="t-right">Amaun (RM)</th></tr></thead><tbody>
+      ${txs.map(t => `<tr><td>${esc(t.tarikh)}</td><td>${esc(t.noResit)}</td><td>${esc(txDesc(t))}</td><td>${esc(t.kaedah)}</td><td class="t-right">${money(t.jumlah)}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center">Tiada bayaran</td></tr>'}</tbody></table>`);
+  openDoc({ title: `Penyata Yuran ${y}`, html, filename: `Penyata_${y}_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: { tel: s.waris.telefon, text: `Assalamualaikum waris kepada ${s.nama}. Dilampirkan penyata yuran tahun ${y}. ${a.jumlah > 0 ? `Baki tertunggak semasa: RM${money(a.jumlah)}.` : 'Tiada tunggakan.'}\n\n${DB.settings.nama}` } });
+}
+
 /* ----- Laporan PDF ----- */
 function reportShell(title, sub, body) {
   return `${docHeader()}${docRule()}<div style="text-align:center;margin-top:12px"><div style="font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">${esc(title)}</div><div style="font-size:11px;color:#475569">${sub}</div></div>${body}${docFooter(`Disediakan oleh ${esc(currentUser ? currentUser.nama : '-')}`)}`;
@@ -1775,22 +2187,22 @@ function arrearsReportDoc() {
 function txFiltered() {
   const from = $('txFrom').value || '0000-00-00', to = $('txTo').value || '9999-12-31', j = $('txJenis').value;
   const q = $('txSearch').value.trim().toUpperCase(), qd = q.replace(/\D/g, '');
-  return DB.tx.filter(t => t.tarikh >= from && t.tarikh <= to && (j === 'all' || t.jenis === j) &&
+  return DB.tx.filter(t => t.tarikh >= from && t.tarikh <= to && (j === 'all' || txJenisList(t).includes(j)) &&
     (!q || t.nama.includes(q) || t.noResit.toUpperCase().includes(q) || (qd.length >= 3 && t.kp.replace(/\D/g, '').includes(qd))))
     .sort((a, b) => (b.tarikh + b.dicipta).localeCompare(a.tarikh + a.dicipta));
 }
 function txReportDoc() {
   const list = txFiltered().slice().reverse(); const tot = list.reduce((a, t) => a + t.jumlah, 0);
   const body = `<table class="d-table" style="margin-top:12px;font-size:10.5px"><thead><tr><th>Tarikh</th><th>No. Resit</th><th>Nama Pelajar</th><th>Jenis / Bulan</th><th>Kaedah</th><th class="t-right">Amaun (RM)</th></tr></thead><tbody>
-    ${list.map(t => `<tr><td>${esc(t.tarikh)}</td><td>${esc(t.noResit)}</td><td>${esc(t.nama)}</td><td>${esc(JENIS[t.jenis].short)}: ${esc(monthsText(t.alokasi))}</td><td>${esc(t.kaedah)}</td><td class="t-right">${money(t.jumlah)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">Tiada transaksi</td></tr>'}
+    ${list.map(t => `<tr><td>${esc(t.tarikh)}</td><td>${esc(t.noResit)}</td><td>${esc(t.nama)}</td><td>${esc(txDesc(t))}</td><td>${esc(t.kaedah)}</td><td class="t-right">${money(t.jumlah)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">Tiada transaksi</td></tr>'}
     <tr><td colspan="5" style="text-align:right;font-weight:800">JUMLAH KUTIPAN</td><td class="t-right" style="font-weight:800">${money(tot)}</td></tr></tbody></table>`;
   openDoc({ title: 'Laporan Transaksi', html: reportShell('Laporan Kutipan Yuran', `${fmtDate($('txFrom').value)} hingga ${fmtDate($('txTo').value)} · ${list.length} transaksi`, body), filename: `Laporan_Kutipan_${$('txFrom').value}_${$('txTo').value}.pdf` });
 }
 function yearSummary(y) {
   return MONTHS.map((m, i) => {
     const ym = ymKey(y, i + 1), list = DB.tx.filter(t => t.tarikh.startsWith(ym));
-    const sek = num(list.filter(t => t.jenis === 'sekolah').reduce((a, t) => a + t.jumlah, 0));
-    const mak = num(list.filter(t => t.jenis === 'makan').reduce((a, t) => a + t.jumlah, 0));
+    const sek = num(list.reduce((a, t) => a + txAmt(t, 'sekolah'), 0));
+    const mak = num(list.reduce((a, t) => a + txAmt(t, 'makan'), 0));
     return { m, sek, mak, jumlah: num(sek + mak), n: list.length };
   });
 }
@@ -1861,7 +2273,7 @@ function exportStudentsCsv() {
   downloadCsv(STUDENT_HEADERS, [...DB.students].sort((a, b) => a.nama.localeCompare(b.nama)).map(s => { const a = arrears(s); return [s.nama, s.kp, s.kelas, s.asrama, s.tarikhDaftar, s.waris.nama, s.waris.hubungan, s.waris.telefon, s.waris.telefon2, s.waris.alamat, s.kadarSekolah.toFixed(2), s.kadarMakan.toFixed(2), s.kes, s.kesalahan, s.masa, s.guru, a.sekolah.toFixed(2), a.makan.toFixed(2), a.jumlah.toFixed(2)]; }), `Senarai_Pelajar_${todayStr()}.csv`);
 }
 const TX_HEADERS = ['Tarikh', 'No. Resit', 'Nama Pelajar', 'No. KP', 'Kelas', 'Jenis Yuran', 'Bulan', 'Amaun (RM)', 'Kaedah', 'No. Rujukan', 'Catatan', 'Direkod Oleh'];
-const txCsvRow = t => [t.tarikh, t.noResit, t.nama, t.kp, t.kelas, JENIS[t.jenis].label, monthsText(t.alokasi), t.jumlah.toFixed(2), t.kaedah, t.rujukan, t.catatan, t.oleh];
+const txCsvRow = t => [t.tarikh, t.noResit, t.nama, t.kp, t.kelas, txLabel(t), txDesc(t), t.jumlah.toFixed(2), t.kaedah, t.rujukan, t.catatan, t.oleh];
 function exportTxCsv() { downloadCsv(TX_HEADERS, txFiltered().map(txCsvRow), `Transaksi_${$('txFrom').value}_${$('txTo').value}.csv`); }
 function exportAllTxCsv() { downloadCsv(TX_HEADERS, [...DB.tx].sort((a, b) => a.tarikh.localeCompare(b.tarikh)).map(txCsvRow), `Semua_Transaksi_${todayStr()}.csv`); }
 function exportArrearsCsv() {
@@ -1929,6 +2341,12 @@ function renderSettings() {
   $('sNama').value = s.nama; $('sAlamat').value = s.alamat; $('sTel').value = s.telefon; $('sEmel').value = s.emel;
   $('sMudir').value = s.mudir; $('sJawatan').value = s.jawatan; $('sPrefix').value = s.prefix; $('sPrefix').placeholder = 'CTH: ' + refPrefix();
   $('sKadarSek').value = s.kadarSekolah; $('sKadarMak').value = s.kadarMakan; $('sApplyAll').checked = false;
+  const by = s.bayaran;
+  $('sJenisLalai').value = by.jenisLalai; $('sKaedahLalai').innerHTML = KAEDAH.map(k => `<option ${k === by.kaedahLalai ? 'selected' : ''}>${k}</option>`).join('');
+  $('sKaedahAktif').innerHTML = KAEDAH.map(k => `<label class="flex cursor-pointer items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold ring-1 ring-slate-200"><input type="checkbox" value="${k}" ${by.kaedahAktif.includes(k) ? 'checked' : ''}> ${k}</label>`).join('');
+  $('sAmaunPantas').value = by.amaunPantas; $('sSelepas').value = by.selepasBayar; $('sResitPrefix').value = by.resitPrefix;
+  $('sPaparBaki').checked = !!by.paparBaki; $('sNotaResit').value = by.notaResit;
+  $('sResitEg').textContent = `Contoh: ${(by.resitPrefix || 'R').toUpperCase()}${new Date().getFullYear()}-00001`;
   $('lhPreview').innerHTML = s.letterhead ? `<img src="${s.letterhead}" class="max-h-28 w-full object-contain">` : 'Tiada kepala surat — pengepala lalai (logo + nama) digunakan';
   applyBranding(); applyUser(); renderUsers(); updateInstallUI();
   let bytes = 0; try { Object.values(K).forEach(k => bytes += (localStorage.getItem(k) || '').length * 2); } catch (e) {}
@@ -2000,6 +2418,13 @@ function saveSettings() {
   Object.assign(s, { nama, alamat: $('sAlamat').value.trim(), telefon: $('sTel').value.trim(), emel: $('sEmel').value.trim(),
     mudir: $('sMudir').value.trim().toUpperCase(), jawatan: $('sJawatan').value.trim() || 'Mudir', prefix: $('sPrefix').value.trim().toUpperCase(),
     kadarSekolah: Math.max(0, num($('sKadarSek').value)), kadarMakan: Math.max(0, num($('sKadarMak').value)) });
+  const aktif = [...$('sKaedahAktif').querySelectorAll('input:checked')].map(i => i.value);
+  if (!aktif.length) return toast('Pilih sekurang-kurangnya satu kaedah bayaran.', 'error');
+  const kl = $('sKaedahLalai').value;
+  s.bayaran = { ...s.bayaran, jenisLalai: $('sJenisLalai').value, kaedahAktif: aktif, kaedahLalai: aktif.includes(kl) ? kl : aktif[0],
+    amaunPantas: $('sAmaunPantas').value.trim(), selepasBayar: $('sSelepas').value,
+    resitPrefix: $('sResitPrefix').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || 'R', paparBaki: $('sPaparBaki').checked, notaResit: $('sNotaResit').value.trim() };
+  pay.jenis = null; bulk.jenis = null; pay.kaedah = null; bulk.kaedah = null;
   const keys = ['settings'];
   if ($('sApplyAll').checked) { DB.students.forEach(st => { st.kadarSekolah = s.kadarSekolah; st.kadarMakan = s.kadarMakan; }); keys.push('students'); }
   if (persist(...keys)) { applyBranding(); renderSettings(); toast('Tetapan disimpan.', 'success'); }
@@ -2040,7 +2465,7 @@ function restoreJson(e) {
       const ok = await confirmModal({ title: 'Pulihkan Sandaran?', icon: 'fa-upload', danger: false, okText: 'Ya, Pulihkan',
         message: `Fail mengandungi <b>${arr.length}</b> pelajar${isV2 ? ` dan <b>${(data.transactions || []).length}</b> transaksi` : ' (format versi lama)'}. Data semasa akan <b>digantikan</b>. Akaun pengguna tidak terjejas.` });
       if (!ok) return;
-      if (data.settings && typeof data.settings === 'object') { const { pin, ...rest } = data.settings; DB.settings = { ...DEFAULT_SETTINGS, ...rest }; if (!THEME_HEX[DB.settings.tema]) DB.settings.tema = 'emerald'; }
+      if (data.settings && typeof data.settings === 'object') { const { pin, ...rest } = data.settings; DB.settings = { ...DEFAULT_SETTINGS, ...rest }; DB.settings.bayaran = { ...DEFAULT_BAYARAN, ...(rest.bayaran || {}) }; if (!DB.settings.seq || typeof DB.settings.seq !== 'object') DB.settings.seq = {}; if (!THEME_HEX[DB.settings.tema]) DB.settings.tema = 'emerald'; }
       DB.students = []; DB.tx = [];
       if (isV2) {
         const seen = new Set();
@@ -2109,7 +2534,17 @@ async function init() {
   document.addEventListener('click', e => { const t = e.target.closest('.tab-btn'); if (t) { if (t.dataset.tab === 'students') showStudentViewSilently(); switchTab(t.dataset.tab); } });
   document.querySelectorAll('.chart-btn').forEach(b => b.addEventListener('click', () => { chartMode = b.dataset.chart; renderDashChart(); }));
   document.querySelectorAll('.rp-btn').forEach(b => b.addEventListener('click', () => { rpTab = b.dataset.rp; renderReports(); }));
-  document.querySelectorAll('.pay-jenis').forEach(b => b.addEventListener('click', () => { pay.jenis = b.dataset.jenis; pay.sel.clear(); renderPayment(); }));
+  document.querySelectorAll('.pay-jenis').forEach(b => b.addEventListener('click', () => { pay.jenis = b.dataset.jenis; const s = payStudent(); if (s) autoSelect(s); renderSingle(); }));
+  document.querySelectorAll('.pm-btn').forEach(b => b.addEventListener('click', () => switchPm(b.dataset.pm)));
+  document.querySelectorAll('.bk-jenis').forEach(b => b.addEventListener('click', () => { bulk.jenis = b.dataset.bk; bulk.sel.clear(); renderBulk(); }));
+  $('bkMonth').addEventListener('change', () => { if ($('bkMonth').value) { bulk.ym = $('bkMonth').value; bulk.sel.clear(); renderBulk(); } });
+  ['bkKelas', 'bkArrears'].forEach(id => $(id).addEventListener('change', () => { if (id === 'bkArrears') bulk.sel.clear(); renderBulk(); }));
+  let bkT; $('bkSearch').addEventListener('input', () => { clearTimeout(bkT); bkT = setTimeout(renderBulk, 150); });
+  document.querySelectorAll('.rc-period').forEach(b => b.addEventListener('click', () => { rec.period = b.dataset.rc; renderRecords(); }));
+  $('rcJenis').addEventListener('change', renderRecords);
+  let rcT; $('rcSearch').addEventListener('input', () => { clearTimeout(rcT); rcT = setTimeout(renderRecords, 150); });
+  $('paySearch').addEventListener('focus', paySearchRender);
+  $('pAmaun').addEventListener('input', updatePayBtn);
 
   let st;
   $('search').addEventListener('input', () => { clearTimeout(st); st = setTimeout(renderStudentList, 150); });
