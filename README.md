@@ -1,8 +1,23 @@
 # Madrasah Pro
 
-Sistem pengurusan pelajar madrasah (SPA satu fail) — buka `index.html` terus di pelayar atau aplikasi editor telefon (TrebEdit/Acode).
+Sistem pengurusan pelajar, yuran dan disiplin madrasah — **boleh dipasang sebagai aplikasi (PWA)** dan berfungsi tanpa internet.
 
-- PIN lalai: **1234** (boleh ditukar di Tetapan)
-- Letakkan fail logo `171855_2.png` dalam folder yang sama dengan `index.html` untuk dipaparkan pada resit.
-- Data disimpan dalam `localStorage` pelayar — muat turun sandaran JSON secara berkala.
-- Kali pertama dibuka memerlukan internet (Tailwind, FontAwesome, Chart.js melalui CDN).
+**Pautan aplikasi:** https://larifsham99.github.io/madrasah-pro/
+
+## Cara pasang
+- **Android (Chrome):** buka pautan → tab **Tetapan** → **Pasang Sekarang** (atau menu ⋮ → *Install app*).
+- **iPhone/iPad (Safari):** buka pautan → butang **Kongsi** → *Add to Home Screen*.
+- **Komputer (Chrome/Edge):** klik ikon pasang di bar alamat.
+
+## Nota
+- PIN lalai: **1234** (tukar di Tetapan).
+- Logo resit: muat naik `171855_2.png` ke folder utama repo ini.
+- Data disimpan dalam peranti (localStorage). Gunakan **Muat Turun Sandaran (JSON)** untuk backup / pindah peranti.
+
+## Fail
+| Fail | Fungsi |
+|---|---|
+| `index.html` | Aplikasi penuh |
+| `manifest.webmanifest` | Maklumat pemasangan aplikasi |
+| `sw.js` | Service worker (luar talian) |
+| `icons/` | Ikon aplikasi |

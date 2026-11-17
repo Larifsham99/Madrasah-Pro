@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#059669">
 <title>Madrasah Pro</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Madrasah Pro">
 
 <!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -153,7 +160,10 @@
             <p class="brand-name truncate text-base font-bold">Madrasah Misbahul Falah</p>
           </div>
         </div>
-        <button onclick="lockApp()" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 active:scale-95" aria-label="Kunci"><i class="fa-solid fa-lock"></i></button>
+        <div class="flex shrink-0 gap-2">
+          <button onclick="installApp()" class="install-btn hidden h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-bold text-primary-700 active:scale-95"><i class="fa-solid fa-download"></i> Pasang</button>
+          <button onclick="lockApp()" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 active:scale-95" aria-label="Kunci"><i class="fa-solid fa-lock"></i></button>
+        </div>
       </div>
     </header>
 
@@ -412,6 +422,11 @@
           </div>
 
           <div class="space-y-5">
+            <div id="installCard" class="rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 p-5 text-white shadow-lg md:p-6">
+              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-mobile-screen-button"></i> Pasang Aplikasi</h3>
+              <p id="installText" class="mt-1 text-xs text-white/80">Pasang Madrasah Pro pada skrin utama telefon atau komputer. Aplikasi boleh dibuka tanpa internet selepas dipasang.</p>
+              <button id="btnInstall" class="mt-4 w-full rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary-700 shadow hover:bg-primary-50"><i class="fa-solid fa-download mr-1"></i> Pasang Sekarang</button>
+            </div>
             <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-100 md:p-6">
               <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-shield-halved text-primary-600"></i> Keselamatan</h3>
               <p class="mt-1 text-xs text-slate-500">Tukar PIN 4 digit untuk skrin kunci. Sistem akan dikunci secara automatik selepas 15 minit tanpa aktiviti.</p>
@@ -1418,6 +1433,51 @@ function renderAll() {
   if (active && active.id === 'tab-students') renderTable();
 }
 
+/* ---------- PWA: Pasang Aplikasi & Luar Talian ---------- */
+let deferredPrompt = null;
+function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function updateInstallUI() {
+  const installed = isStandalone();
+  document.querySelectorAll('.install-btn').forEach(b => { b.classList.toggle('hidden', installed || !deferredPrompt); b.classList.toggle('flex', !installed && !!deferredPrompt); });
+  const btn = $('btnInstall'), txt = $('installText');
+  if (installed) {
+    txt.textContent = 'Aplikasi telah dipasang pada peranti ini. Anda sedang menggunakan versi aplikasi.';
+    btn.classList.add('hidden');
+  } else if (location.protocol === 'file:') {
+    txt.textContent = 'Pemasangan hanya tersedia apabila dibuka melalui pautan web (https), contohnya GitHub Pages.';
+    btn.classList.add('hidden');
+  } else {
+    btn.classList.remove('hidden');
+  }
+}
+async function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    updateInstallUI();
+    toast(outcome === 'accepted' ? 'Aplikasi sedang dipasang...' : 'Pemasangan dibatalkan.', outcome === 'accepted' ? 'success' : 'info');
+  } else if (isIOS()) {
+    confirmModal({ title: 'Pasang di iPhone/iPad', icon: 'fa-mobile-screen-button', danger: false, okText: 'Faham',
+      message: 'Buka pautan ini dalam <b>Safari</b>, tekan butang <b>Kongsi</b> <i class="fa-solid fa-arrow-up-from-bracket"></i>, kemudian pilih <b>"Add to Home Screen" / "Tambah ke Skrin Utama"</b>.' });
+  } else {
+    confirmModal({ title: 'Pasang Aplikasi', icon: 'fa-mobile-screen-button', danger: false, okText: 'Faham',
+      message: 'Buka pautan ini dalam <b>Google Chrome</b>, tekan menu <b>&#8942;</b> di penjuru atas, kemudian pilih <b>"Install app" / "Pasang aplikasi"</b> atau <b>"Add to Home screen"</b>.' });
+  }
+}
+function initPWA() {
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; updateInstallUI(); });
+  window.addEventListener('appinstalled', () => { deferredPrompt = null; updateInstallUI(); toast('Madrasah Pro berjaya dipasang!', 'success'); });
+  $('btnInstall').addEventListener('click', installApp);
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  window.addEventListener('offline', () => toast('Anda kini luar talian. Data tetap disimpan dalam peranti.', 'warning'));
+  window.addEventListener('online', () => toast('Sambungan internet dipulihkan.', 'success'));
+  updateInstallUI();
+}
+
 /* ---------- Permulaan ---------- */
 function init() {
   loadData();
@@ -1425,6 +1485,7 @@ function init() {
   buildPinPad();
   initForm();
   initSettings();
+  initPWA();
   updateDiscipline();
 
   $('todayLabel').textContent = new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
