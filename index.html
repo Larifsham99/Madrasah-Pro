@@ -87,8 +87,15 @@
   #docView { display: none; }
   body.doc-mode #app, body.doc-mode #loginScreen { display: none !important; }
   body.doc-mode #docView { display: block; }
-  .a4 { width: 210mm; min-height: 297mm; background: #fff; padding: 14mm 14mm; box-shadow: 0 10px 30px rgba(0,0,0,.15); color: #0f172a; font-size: 12.5px; line-height: 1.55; }
-  .a4.pdf-mode { width: 182mm; min-height: 0; padding: 0; box-shadow: none; transform: none !important; }
+  .doc-pages { width: 210mm; display: flex; flex-direction: column; gap: 18px; }
+  .lh-page { width: 210mm; min-height: 297mm; background: #fff; padding: 14mm; box-shadow: 0 10px 30px rgba(0,0,0,.15); color: #0f172a; font-size: 12.5px; line-height: 1.55; position: relative; overflow: hidden; box-sizing: border-box; }
+  .doc-pages.lh-on .dh-std { display: none; }
+  .doc-pages:not(.lh-on) .dh-lh { display: none; }
+  .doc-pages.lh-on.lh-pagemode .lh-page { height: 297mm; min-height: 0; background-image: var(--lh-bg); background-size: 100% 100%; background-repeat: no-repeat; padding: var(--lh-t) var(--lh-r) var(--lh-b) var(--lh-l); }
+  .doc-pages.pdf-mode { gap: 0; display: block; transform: none !important; width: 182mm; }
+  .doc-pages.pdf-mode .lh-page { width: 182mm; min-height: 0; padding: 0; box-shadow: none; overflow: visible; }
+  .doc-pages.pdf-mode.lh-on.lh-pagemode { width: 210mm; }
+  .doc-pages.pdf-mode.lh-on.lh-pagemode .lh-page { width: 210mm; height: 296.5mm; padding: var(--lh-t) var(--lh-r) var(--lh-b) var(--lh-l); overflow: hidden; }
   .d-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   .d-table th, .d-table td { border: 1px solid #cbd5e1; padding: 6px 9px; text-align: left; vertical-align: top; }
   .d-table thead th { background: #f1f5f9; font-weight: 700; color: #334155; }
@@ -97,17 +104,19 @@
   .d-section { font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--p-800)); border-bottom: 2px solid rgb(var(--p-600)); padding-bottom: 3px; margin: 16px 0 8px; }
   .t-right { text-align: right !important; }
 
-  @page { size: A4 portrait; margin: 14mm; }
   @media print {
     html, body { background: #fff !important; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     .no-print, #app, #loginScreen, #toastWrap, #modalWrap, #dlgWrap { display: none !important; }
     #docView { display: block !important; padding: 0 !important; background: #fff !important; }
     #docScaler { width: auto !important; height: auto !important; margin: 0 !important; }
-    .a4 { width: 100% !important; min-height: auto; padding: 0; box-shadow: none; transform: none !important; }
+    .doc-pages { display: block; width: auto; gap: 0; transform: none !important; }
+    .lh-page { width: auto; min-height: 0; padding: 0; box-shadow: none; overflow: visible; }
+    .doc-pages.lh-on.lh-pagemode .lh-page { width: 210mm; height: 297mm; padding: var(--lh-t) var(--lh-r) var(--lh-b) var(--lh-l); overflow: hidden; }
     .avoid-break { page-break-inside: avoid; break-inside: avoid; }
   }
 </style>
+<style id="pageRule">@page { size: A4 portrait; margin: 14mm; }</style>
 </head>
 <body class="text-slate-800 antialiased" data-theme="emerald">
 
@@ -719,24 +728,21 @@
                   <div><label class="label" for="sEmel">Emel</label><input id="sEmel" class="field" type="email"></div>
                 </div>
                 <div><span class="label">Warna Tema</span>
-                  <div class="grid grid-cols-3 gap-3" id="themePicker">
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4" id="themePicker">
                     <button type="button" data-theme-opt="emerald" class="theme-opt rounded-xl border-2 p-3 text-xs font-semibold"><span class="mx-auto mb-2 block h-8 w-8 rounded-full bg-[#059669] shadow"></span>Hijau Zamrud</button>
                     <button type="button" data-theme-opt="blue" class="theme-opt rounded-xl border-2 p-3 text-xs font-semibold"><span class="mx-auto mb-2 block h-8 w-8 rounded-full bg-[#2563eb] shadow"></span>Biru Korporat</button>
                     <button type="button" data-theme-opt="gold" class="theme-opt rounded-xl border-2 p-3 text-xs font-semibold"><span class="mx-auto mb-2 block h-8 w-8 rounded-full bg-[#d97706] shadow"></span>Emas</button>
+                    <label data-theme-opt="custom" class="theme-opt relative cursor-pointer rounded-xl border-2 p-3 text-center text-xs font-semibold"><span id="customSwatch" class="mx-auto mb-2 block h-8 w-8 rounded-full shadow ring-2 ring-white" style="background:conic-gradient(#ef4444,#f59e0b,#10b981,#3b82f6,#8b5cf6,#ef4444)"></span>Warna Sendiri<input id="sTemaHex" type="color" class="absolute inset-0 h-full w-full cursor-pointer opacity-0"></label>
                   </div>
+                  <div id="logoSwatches" class="mt-3 flex flex-wrap items-center gap-2"></div>
                 </div>
               </div>
             </div>
 
             <div data-admin class="card p-5 md:p-6">
-              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-file-signature text-primary-600"></i> Kepala Surat &amp; Dokumen</h3>
-              <p class="mt-1 text-xs text-slate-500">Muat naik imej kepala surat (PNG/JPG, lebar penuh A4). Ia akan dipaparkan di atas semua resit, surat dan laporan.</p>
-              <div id="lhPreview" class="mt-4 flex min-h-[80px] items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-2 text-xs text-slate-400">Tiada kepala surat — pengepala lalai (logo + nama) digunakan</div>
-              <div class="mt-3 grid grid-cols-2 gap-3">
-                <button id="btnLh" class="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white"><i class="fa-solid fa-image mr-1"></i> Muat Naik</button>
-                <button id="btnLhDel" class="rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600"><i class="fa-solid fa-xmark mr-1"></i> Buang</button>
-              </div>
-              <input id="fileLh" type="file" accept="image/png,image/jpeg" class="hidden">
+              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-photo-film text-primary-600"></i> Aset &amp; Dokumen Rasmi</h3>
+              <p class="mt-1 text-xs text-slate-500">Simpan kepala surat rasmi, logo, tandatangan &amp; cop. Setiap aset boleh dipangkas dan digunakan bila-bila masa pada resit, surat &amp; laporan.</p>
+              <div id="assetBody" class="mt-4"></div>
               <div class="mt-4 grid grid-cols-2 gap-3">
                 <div><label class="label" for="sMudir">Nama Penandatangan</label><input id="sMudir" class="field uppercase" type="text" placeholder="CTH: USTAZ AHMAD BIN ..."></div>
                 <div><label class="label" for="sJawatan">Jawatan</label><input id="sJawatan" class="field" type="text" placeholder="Mudir"></div>
@@ -785,13 +791,14 @@
     <div class="mx-auto flex max-w-4xl flex-wrap items-center gap-2">
       <button onclick="closeDoc()" class="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold"><i class="fa-solid fa-arrow-left mr-1"></i> Kembali</button>
       <p id="docTitle" class="mr-auto hidden truncate text-sm font-semibold text-white/80 sm:block"></p>
+      <button id="docLhBtn" onclick="toggleLh()" class="hidden rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold"></button>
       <button onclick="window.print()" class="rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-print"></i><span class="ml-1 hidden sm:inline">Cetak</span></button>
       <button onclick="downloadPdf()" class="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-file-pdf"></i><span class="ml-1">PDF</span></button>
       <button id="docShareBtn" onclick="sharePdf()" class="hidden rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold"><i class="fa-brands fa-whatsapp"></i><span class="ml-1">Kongsi PDF</span></button>
       <button id="docWaBtn" onclick="docWhatsApp()" class="hidden rounded-xl bg-emerald-800 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-comment-dots"></i><span class="ml-1 hidden sm:inline">Mesej Waris</span></button>
     </div>
   </div>
-  <div class="pt-4"><div id="docScaler" class="mx-auto"><div id="docPage" class="a4"></div></div></div>
+  <div class="pt-4"><div id="docScaler" class="mx-auto"><div id="docPage" class="doc-pages"></div></div></div>
 </div>
 
 <!-- ================= TOAST, MODAL, DIALOG ================= -->
@@ -940,7 +947,7 @@ function out_(o) {
    ===================================================================== */
 
 /* ---------- Pemalar ---------- */
-const K = { settings: 'mp2_settings', students: 'mp2_students', tx: 'mp2_transactions', users: 'mp2_users' };
+const K = { settings: 'mp2_settings', students: 'mp2_students', tx: 'mp2_transactions', users: 'mp2_users', assets: 'mp2_assets' };
 const OLD = { students: 'madrasahpro_students_v1', settings: 'madrasahpro_settings_v1' };
 const KELAS = ['Edadi', 'Tingkatan 1', 'Tingkatan 2', 'Tingkatan 3', 'Tingkatan 4', 'Tingkatan 5'];
 const MONTHS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
@@ -971,7 +978,7 @@ const THEME_HEX = { emerald: '#059669', blue: '#2563eb', gold: '#d97706' };
 const TAB_TITLES = { dashboard: 'Papan Pemuka', students: 'Pelajar & Waris', payment: 'Kutipan Yuran', docs: 'Dokumen & Surat', reports: 'Laporan', settings: 'Tetapan' };
 
 /* ---------- Keadaan ---------- */
-const DB = { settings: { ...DEFAULT_SETTINGS }, students: [], tx: [], users: [] };
+const DB = { settings: { ...DEFAULT_SETTINGS }, students: [], tx: [], users: [], assets: [] };
 let currentUser = null;
 let editingId = null;
 let profileId = null;
@@ -1152,6 +1159,7 @@ function loadData() {
   DB.students = (readLS(K.students, []) || []).map(normStudent).filter(Boolean);
   DB.tx = (readLS(K.tx, []) || []).map(normTx).filter(Boolean);
   DB.users = (readLS(K.users, []) || []).filter(u => u && u.username && u.hash);
+  DB.assets = (readLS(K.assets, []) || []).map(normAsset).filter(Boolean);
   invalidate();
 }
 function migrateV1() {
@@ -1451,8 +1459,10 @@ function applyUser() {
 /* ---------- Tema & Penjenamaan ---------- */
 function applyBranding() {
   const s = DB.settings;
-  document.body.dataset.theme = s.tema;
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', THEME_HEX[s.tema] || THEME_HEX.emerald);
+  document.body.dataset.theme = s.tema === 'custom' ? 'emerald' : s.tema;
+  const customHex = applyCustomTheme();
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', customHex || THEME_HEX[s.tema] || THEME_HEX.emerald);
+  if ($('customSwatch') && s.tema === 'custom' && s.temaHex) $('customSwatch').style.background = s.temaHex;
   document.querySelectorAll('.brand-name').forEach(el => el.textContent = s.nama);
   document.title = `Madrasah Pro — ${s.nama}`;
   document.querySelectorAll('.theme-opt').forEach(b => {
@@ -2311,33 +2321,75 @@ function waReceipt(id) {
 /* =====================================================================
    DOKUMEN: RESIT, SURAT & LAPORAN (A4 + PDF)
    ===================================================================== */
-function docHeader() {
-  const s = DB.settings;
-  if (s.letterhead) return `<img src="${s.letterhead}" alt="Kepala Surat" style="width:100%;max-height:48mm;object-fit:contain;display:block;margin:0 auto 6px">`;
-  return `<div style="text-align:center">
-    ${logoOK ? '<img src="171855_2.png" alt="Logo" style="height:76px;width:76px;object-fit:contain;margin:0 auto;display:block">' : '<div style="width:64px;height:64px;margin:0 auto;border-radius:50%;border:3px solid rgb(var(--p-600));color:rgb(var(--p-700));display:flex;align-items:center;justify-content:center;font-size:28px"><i class="fa-solid fa-mosque"></i></div>'}
-    <div style="margin-top:6px;font-size:20px;font-weight:800;letter-spacing:.03em;text-transform:uppercase">${esc(s.nama)}</div>
-    ${s.alamat ? `<div style="font-size:11px;color:#475569">${esc(s.alamat)}</div>` : ''}
-    ${s.telefon || s.emel ? `<div style="font-size:11px;color:#475569">${[s.telefon && 'Tel: ' + esc(s.telefon), s.emel && 'Emel: ' + esc(s.emel)].filter(Boolean).join(' &nbsp;|&nbsp; ')}</div>` : ''}
-  </div>`;
+function stdHeader() {
+  const s = DB.settings, lg = logoSrc();
+  const contact = [s.telefon && `<i class="fa-solid fa-phone"></i> ${esc(s.telefon)}`, s.emel && `<i class="fa-solid fa-envelope"></i> ${esc(s.emel)}`].filter(Boolean).join(' &nbsp;&nbsp; ');
+  return `<div style="display:flex;align-items:center;gap:14px">
+      ${lg ? `<img src="${lg}" alt="Logo" style="height:72px;width:72px;object-fit:contain;flex-shrink:0">` : '<div style="width:64px;height:64px;flex-shrink:0;border-radius:50%;border:3px solid rgb(var(--p-600));color:rgb(var(--p-700));display:flex;align-items:center;justify-content:center;font-size:28px"><i class="fa-solid fa-mosque"></i></div>'}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:19px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:rgb(var(--p-800));line-height:1.2">${esc(s.nama)}</div>
+        ${s.alamat ? `<div style="font-size:10.5px;color:#475569;margin-top:2px">${esc(s.alamat)}</div>` : ''}
+        ${contact ? `<div style="font-size:10.5px;color:#475569;margin-top:1px">${contact}</div>` : ''}
+      </div>
+    </div>
+    <div style="height:3px;background:rgb(var(--p-600));margin-top:10px"></div><div style="height:1px;background:rgb(var(--p-600));margin-top:2px"></div>`;
 }
-function docRule() { return `<div style="height:3px;background:rgb(var(--p-600));margin-top:10px"></div><div style="height:1px;background:rgb(var(--p-600));margin-top:2px"></div>`; }
-function docFooter(text) { return `<div style="margin-top:28px;border-top:1px dashed #cbd5e1;padding-top:8px;text-align:center;font-size:9.5px;color:#64748b">${text} · Dijana oleh Madrasah Pro pada ${esc(fmtDateTime(new Date()))}</div>`; }
-
-function openDoc({ title, html, filename, share = null }) {
-  currentDoc = { title, filename, share, pdf: null };
+/* Pengepala dokumen: versi kepala surat (.dh-lh) & versi standard (.dh-std) — ditukar dengan satu butang tanpa jana semula */
+function docHeader(type = 'surat') {
+  const c = docCfg(), lh = assetById(c.letterheadId);
+  const strip = lh && c.lhMode === 'header' ? `<div class="dh-lh"><img src="${lh.data}" alt="Kepala Surat" style="width:100%;display:block;margin-bottom:${c.margin.gap}mm"></div>` : '';
+  return `${strip}<div class="dh-std">${stdHeader()}</div>`;
+}
+function docRule() { return ''; }
+function docFooter(text) { return `<div style="margin-top:22px;border-top:1px dashed #cbd5e1;padding-top:6px;text-align:center;font-size:9px;color:#64748b">${text} · Dijana oleh Madrasah Pro pada ${esc(fmtDateTime(new Date()))}</div>`; }
+function lhState(type) {
+  const c = docCfg(), lh = assetById(c.letterheadId);
+  const pageMode = !!lh && c.lhMode === 'page' && type !== 'laporan';
+  const allowed = !!lh && (c.lhMode === 'header' || pageMode);
+  return { lh, c, pageMode, allowed, on: allowed && !!c.guna[type] };
+}
+function openDoc({ title, html, pages, type = 'surat', filename, share = null }) {
+  pages = pages || [html];
+  const st = lhState(type), el = $('docPage');
+  currentDoc = { title, filename, share, pdf: null, type };
   $('docTitle').textContent = title;
-  $('docPage').innerHTML = html;
+  el.className = 'doc-pages' + (st.on ? ' lh-on' : '') + (st.pageMode ? ' lh-pagemode' : '') + (type === 'laporan' ? ' lh-flow' : '');
+  el.style.cssText = '';
+  if (st.lh) {
+    const m = st.c.margin;
+    el.style.setProperty('--lh-bg', `url("${st.lh.data}")`);
+    ['t', 'b', 'l', 'r'].forEach(k => el.style.setProperty('--lh-' + k, m[k] + 'mm'));
+  }
+  el.innerHTML = pages.map((h, i) => `<div class="lh-page" style="${i < pages.length - 1 ? 'page-break-after:always;break-after:page;' : ''}">${h}</div>`).join('');
+  $('docLhBtn').classList.toggle('hidden', !st.allowed);
   $('docShareBtn').classList.toggle('hidden', !share);
   $('docWaBtn').classList.toggle('hidden', !share);
+  updateLhUi();
   document.body.classList.add('doc-mode');
   window.scrollTo(0, 0);
   requestAnimationFrame(fitDoc);
-  const imgs = [...$('docPage').querySelectorAll('img')];
+  const imgs = [...el.querySelectorAll('img')];
   Promise.all(imgs.map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))).then(() => {
-    fitDoc();
+    fitDoc(); checkOverflow();
     if (share && window.html2pdf) setTimeout(() => buildPdf().then(b => { if (currentDoc && currentDoc.filename === filename) currentDoc.pdf = b; }).catch(() => {}), 300);
   });
+}
+function updateLhUi() {
+  const el = $('docPage'), on = el.classList.contains('lh-on'), page = on && el.classList.contains('lh-pagemode');
+  $('docLhBtn').innerHTML = `<i class="fa-solid fa-file-image"></i><span class="ml-1 hidden sm:inline">Kepala Surat: ${on ? 'Hidup' : 'Mati'}</span>`;
+  $('docLhBtn').className = `rounded-xl px-3 py-2 text-sm font-semibold ${on ? 'bg-sky-600' : 'bg-white/10'} ${$('docLhBtn').classList.contains('hidden') ? 'hidden' : ''}`;
+  $('pageRule').textContent = `@page { size: A4 portrait; margin: ${page ? 0 : 14}mm; }`;
+}
+function toggleLh() {
+  $('docPage').classList.toggle('lh-on');
+  if (currentDoc) currentDoc.pdf = null;
+  updateLhUi(); fitDoc(); checkOverflow();
+}
+function checkOverflow() {
+  const el = $('docPage');
+  if (!el.classList.contains('lh-on') || !el.classList.contains('lh-pagemode')) return;
+  const over = [...el.querySelectorAll('.lh-page')].some(p => p.scrollHeight > p.clientHeight + 2);
+  if (over) toast('Kandungan melebihi ruang halaman. Kecilkan jarak atas/bawah di Tetapan → Laras Kedudukan Teks.', 'warning');
 }
 function fitDoc() {
   const page = $('docPage'), sc = $('docScaler');
@@ -2348,28 +2400,132 @@ function fitDoc() {
   page.style.transformOrigin = 'top left';
   sc.style.width = w * s + 'px'; sc.style.height = page.offsetHeight * s + 'px';
 }
-function closeDoc() { document.body.classList.remove('doc-mode'); currentDoc = null; resetIdle(); renderCurrent(); }
 async function buildPdf() {
   if (!window.html2pdf) throw new Error('nolib');
   const page = $('docPage');
+  const pageMode = page.classList.contains('lh-on') && page.classList.contains('lh-pagemode');
   const clone = page.cloneNode(true);
   clone.classList.add('pdf-mode'); clone.style.transform = 'none';
   const srcImgs = page.querySelectorAll('img');
-  clone.querySelectorAll('.no-print').forEach(el => el.remove());
   clone.querySelectorAll('img').forEach((im, i) => { const o = srcImgs[i]; if (!o || !o.complete || !o.naturalWidth || o.style.display === 'none') im.remove(); });
+  clone.querySelectorAll('.no-print').forEach(el => el.remove());
   const holder = document.createElement('div');
   holder.style.cssText = 'position:fixed;left:-10000px;top:0;background:#fff';
   holder.appendChild(clone); document.body.appendChild(holder);
   try {
+    const mg = pageMode ? 0 : 14;
     return await html2pdf().set({
-      margin: [14, 14, 14, 14], filename: currentDoc.filename,
-      image: { type: 'jpeg', quality: 0.96 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 800 },
+      margin: [mg, mg, mg, mg], filename: currentDoc.filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 820 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.avoid-break'] }
     }).from(clone).outputPdf('blob');
   } finally { holder.remove(); }
 }
+
+/* ----- Resit rasmi (reka bentuk profesional) ----- */
+function qrDataUrl(text, size = 92) {
+  if (!window.QRCode) return '';
+  try { const d = document.createElement('div'); new QRCode(d, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M }); const c = d.querySelector('canvas'); return c ? c.toDataURL('image/png') : ''; } catch (e) { return ''; }
+}
+function receiptHtml(t) {
+  const s = DB.students.find(x => x.id === t.studentId);
+  const baki = s && BY().paparBaki ? arrears(s) : null;
+  const c = docCfg(), ttd = assetById(c.ttdId), cop = assetById(c.copId);
+  const P6 = 'rgb(var(--p-600))', P7 = 'rgb(var(--p-700))', P8 = 'rgb(var(--p-800))', P50 = 'rgb(var(--p-50))';
+  const label = 'font-size:8.5px;font-weight:800;letter-spacing:.14em;color:#64748b;text-transform:uppercase';
+  const rows = t.alokasi.map((a, i) => {
+    const full = s ? rateOf(s, a.jenis) : a.amaun;
+    const part = a.amaun < full - 0.001 ? (isAnnual(a.jenis) ? `Ansuran · baki ${money(s ? remainingFor(s, a.jenis, a.bulan) : 0)}` : 'Bayaran sebahagian') : '';
+    return `<tr style="background:${i % 2 ? '#f8fafc' : '#fff'}">
+      <td style="padding:7px 10px;color:#64748b;text-align:center;border-bottom:1px solid #e2e8f0">${i + 1}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0"><b>${esc(JENIS[a.jenis].label)}</b>${part ? `<div style="font-size:10px;color:#b45309">${part}</div>` : ''}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #e2e8f0">${esc(periodLabel(a.jenis, a.bulan))}</td>
+      <td style="padding:7px 10px;text-align:right;border-bottom:1px solid #e2e8f0;font-variant-numeric:tabular-nums">${money(a.amaun)}</td></tr>`;
+  }).join('');
+  const qr = qrDataUrl(`RESIT ${t.noResit} | ${t.nama} | RM${money(t.jumlah)} | ${t.tarikh} | ${DB.settings.nama}`);
+  return `${docHeader('resit')}
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-top:12px">
+    <div>
+      <div style="font-size:24px;font-weight:800;letter-spacing:.14em;color:${P7};line-height:1">RESIT RASMI</div>
+      <div style="font-size:9px;letter-spacing:.32em;color:#94a3b8;margin-top:3px">OFFICIAL RECEIPT</div>
+    </div>
+    <div style="border:1.5px solid ${P6};border-radius:10px;overflow:hidden;min-width:60mm">
+      <div style="background:${P6};color:#fff;padding:3px 12px;${label.replace('#64748b', '#fff')}">No. Resit</div>
+      <div style="padding:4px 12px 2px;font-size:16px;font-weight:800;font-family:ui-monospace,Menlo,monospace;color:${P8}">${esc(t.noResit)}</div>
+      <div style="padding:0 12px 5px;font-size:10.5px;color:#475569">Tarikh: <b>${fmtDate(t.tarikh)}</b></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px">
+      <div style="${label}">Diterima Daripada</div>
+      <div style="font-size:13px;font-weight:800;margin-top:3px">${esc(t.waris || (s && s.waris.nama) || '-')}</div>
+      <div style="font-size:10.5px;color:#475569">${s ? `${esc(s.waris.hubungan)} · ${esc(s.waris.telefon)}` : ''}</div>
+    </div>
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:9px 12px">
+      <div style="${label}">Maklumat Pelajar</div>
+      <div style="font-size:13px;font-weight:800;margin-top:3px">${esc(t.nama)}</div>
+      <div style="font-size:10.5px;color:#475569">${esc(t.kp)} · ${esc(t.kelas)}</div>
+    </div>
+  </div>
+  <div style="position:relative;margin-top:12px">
+    <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:11.5px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">
+      <thead><tr style="background:${P6};color:#fff">
+        <th style="padding:8px 10px;width:8%;text-align:center;font-size:10px;letter-spacing:.08em">BIL</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:.08em">PERIHAL BAYARAN</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:.08em;width:26%">TEMPOH</th>
+        <th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:.08em;width:20%">AMAUN (RM)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="position:absolute;right:30%;top:42%;transform:rotate(-14deg);border:3px solid ${P6};color:${P6};border-radius:10px;padding:4px 14px;font-size:20px;font-weight:900;letter-spacing:.2em;opacity:.16;pointer-events:none">DIBAYAR</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:stretch;gap:12px;margin-top:10px">
+    <div style="flex:1;font-size:10.5px;color:#334155;padding-top:4px">
+      <div style="${label}">Jumlah Dalam Perkataan</div>
+      <div style="font-style:italic;margin-top:2px">${esc(ringgitWords(t.jumlah))}</div>
+    </div>
+    <div style="background:${P50};border-left:4px solid ${P6};border-radius:8px;padding:8px 14px;min-width:58mm;text-align:right">
+      <div style="${label};color:${P7}">Jumlah Diterima</div>
+      <div style="font-size:22px;font-weight:900;color:${P8};font-variant-numeric:tabular-nums">RM ${money(t.jumlah)}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;font-size:11px">
+    <div><div style="${label}">Kaedah</div><div style="font-weight:700">${esc(t.kaedah)}</div></div>
+    <div><div style="${label}">No. Rujukan</div><div style="font-weight:700">${esc(t.rujukan || '-')}</div></div>
+    <div><div style="${label}">Diterima Oleh</div><div style="font-weight:700">${esc(t.oleh || '-')}</div></div>
+  </div>
+  ${t.catatan ? `<div style="margin-top:8px;font-size:10.5px;color:#475569"><b>Catatan:</b> ${esc(t.catatan)}</div>` : ''}
+  ${baki ? `<div style="margin-top:10px;border-radius:8px;padding:7px 12px;font-size:11px;${baki.jumlah > 0 ? 'background:#fff1f2;color:#9f1239;border:1px solid #fecdd3' : 'background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0'}">
+      ${baki.jumlah > 0 ? `<b>Baki tertunggak semasa: RM ${money(baki.jumlah)}</b> &nbsp;(Yuran Sekolah RM ${money(baki.sekolah)} · Yuran Makan RM ${money(baki.makan)})` : '<b>Tiada tunggakan yuran.</b> Alhamdulillah, terima kasih.'}</div>` : ''}
+  <div class="avoid-break" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-top:18px">
+    <div style="display:flex;align-items:flex-end;gap:10px;max-width:55%">
+      ${qr ? `<img src="${qr}" alt="QR" style="width:68px;height:68px;border:1px solid #e2e8f0;border-radius:6px;padding:3px">` : ''}
+      <div style="font-size:9.5px;color:#64748b">${BY().notaResit ? `<div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:3px">${esc(BY().notaResit)}</div>` : ''}Resit ini dijana oleh komputer dan sah tanpa tandatangan.${qr ? '<br>Imbas kod QR untuk butiran resit.' : ''}</div>
+    </div>
+    <div style="width:62mm;text-align:center;position:relative">
+      <div style="height:52px;position:relative">
+        ${cop ? `<img src="${cop.data}" alt="Cop" style="position:absolute;left:50%;bottom:-6px;transform:translateX(-30%) rotate(-8deg);height:66px;opacity:.85">` : ''}
+        ${ttd ? `<img src="${ttd.data}" alt="Tandatangan" style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);max-height:50px;max-width:56mm">` : ''}
+      </div>
+      <div style="border-top:1px solid #334155;padding-top:3px;font-size:10.5px"><b>${esc(t.oleh || '-')}</b><br><span style="color:#64748b">Penerima Bayaran</span></div>
+    </div>
+  </div>
+  <div style="margin-top:14px;height:4px;border-radius:4px;background:linear-gradient(90deg,${P6},${P50})"></div>`;
+}
+function openReceipt(txId) {
+  const t = DB.tx.find(x => x.id === txId); if (!t) return toast('Transaksi tidak dijumpai.', 'error');
+  const s = DB.students.find(x => x.id === t.studentId);
+  openDoc({ title: `Resit ${t.noResit}`, html: receiptHtml(t), type: 'resit', filename: `Resit_${t.noResit}_${t.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: s ? { tel: s.waris.telefon, text: waReceiptMsg(t) } : null });
+}
+function openReceiptsBatch(ids, title = 'Resit Gabungan') {
+  const list = ids.map(id => DB.tx.find(t => t.id === id)).filter(Boolean);
+  if (!list.length) return toast('Tiada resit dipilih.', 'warning');
+  if (list.length === 1) return openReceipt(list[0].id);
+  openDoc({ title: `${title} · ${list.length} resit`, pages: list.map(receiptHtml), type: 'resit', filename: `Resit_Gabungan_${list.length}_${todayStr()}.pdf` });
+}
+
+function closeDoc() { document.body.classList.remove('doc-mode'); currentDoc = null; resetIdle(); renderCurrent(); }
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob); const a = document.createElement('a');
   a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
@@ -2403,53 +2559,6 @@ async function sharePdf() {
 function docWhatsApp() { if (currentDoc && currentDoc.share) openWhatsApp(currentDoc.share.tel, currentDoc.share.text); }
 
 /* ----- Resit ----- */
-function receiptHtml(t) {
-  const s = DB.students.find(x => x.id === t.studentId);
-  const baki = s && BY().paparBaki ? arrears(s) : null;
-  const rows = t.alokasi.map((a, i) => {
-    const full = s ? rateOf(s, a.jenis) : a.amaun;
-    const part = a.amaun < full - 0.001 ? (isAnnual(a.jenis) ? ` <i>(ansuran — baki ${money(s ? remainingFor(s, a.jenis, a.bulan) : 0)})</i>` : ' <i>(sebahagian)</i>') : '';
-    return `<tr><td style="text-align:center">${i + 1}</td><td>${esc(JENIS[a.jenis].label)} — ${esc(periodLabel(a.jenis, a.bulan))}${part}</td><td class="t-right">${money(a.amaun)}</td></tr>`;
-  }).join('');
-  return `${docHeader()}${docRule()}
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px">
-      <div style="font-size:17px;font-weight:800;letter-spacing:.2em">RESIT RASMI</div>
-      <div style="text-align:right;font-size:12px"><div><b>No. Resit:</b> ${esc(t.noResit)}</div><div><b>Tarikh:</b> ${fmtDate(t.tarikh)}</div></div>
-    </div>
-    <table class="d-table kv" style="margin-top:12px">
-      <tr><th>Diterima Daripada</th><td><b>${esc(t.waris || (s && s.waris.nama) || '-')}</b>${s ? ` (${esc(s.waris.hubungan)})` : ''}</td></tr>
-      <tr><th>Nama Pelajar</th><td><b>${esc(t.nama)}</b></td></tr>
-      <tr><th>No. Kad Pengenalan</th><td>${esc(t.kp)}</td></tr>
-      <tr><th>Kelas</th><td>${esc(t.kelas)}</td></tr>
-    </table>
-    <div class="d-section">Butiran Bayaran</div>
-    <table class="d-table"><thead><tr><th style="width:8%;text-align:center">Bil</th><th>Perkara</th><th class="t-right" style="width:24%">Amaun (RM)</th></tr></thead>
-      <tbody>${rows}<tr><td></td><td style="text-align:right;font-weight:800">JUMLAH</td><td class="t-right" style="font-weight:800;font-size:13px">${money(t.jumlah)}</td></tr></tbody></table>
-    <p style="margin-top:8px;font-style:italic">${esc(ringgitWords(t.jumlah))}</p>
-    <table class="d-table kv" style="margin-top:10px">
-      <tr><th>Kaedah Bayaran</th><td>${esc(t.kaedah)}${t.rujukan ? ` (Ruj: ${esc(t.rujukan)})` : ''}</td></tr>
-      ${t.catatan ? `<tr><th>Catatan</th><td>${esc(t.catatan)}</td></tr>` : ''}
-      ${baki ? `<tr><th>Baki Tertunggak Semasa</th><td><b style="color:${baki.jumlah > 0 ? '#be123c' : '#047857'}">${baki.jumlah > 0 ? rm(baki.jumlah) + ` (Sekolah ${rm(baki.sekolah)} · Makan ${rm(baki.makan)})` : 'TIADA — Alhamdulillah'}</b></td></tr>` : ''}
-    </table>
-    ${BY().notaResit ? `<p style="margin-top:12px;text-align:center;font-weight:600;color:#334155">${esc(BY().notaResit)}</p>` : ''}
-    <div class="avoid-break" style="display:flex;justify-content:space-between;margin-top:34px;font-size:11.5px">
-      <div style="width:45%"><div style="height:44px"></div><div style="border-top:1px solid #64748b;padding-top:4px"><b>Diterima oleh:</b> ${esc(t.oleh || '-')}<br>Cop Rasmi Madrasah</div></div>
-      <div style="width:45%;text-align:right;color:#64748b;font-size:10.5px;align-self:flex-end">Resit ini dijana oleh komputer dan sah tanpa tandatangan.</div>
-    </div>
-    ${docFooter(esc(DB.settings.nama))}`;
-}
-function openReceipt(txId) {
-  const t = DB.tx.find(x => x.id === txId); if (!t) return toast('Transaksi tidak dijumpai.', 'error');
-  const s = DB.students.find(x => x.id === t.studentId);
-  openDoc({ title: `Resit ${t.noResit}`, html: receiptHtml(t), filename: `Resit_${t.noResit}_${t.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: s ? { tel: s.waris.telefon, text: waReceiptMsg(t) } : null });
-}
-function openReceiptsBatch(ids, title = 'Resit Gabungan') {
-  const list = ids.map(id => DB.tx.find(t => t.id === id)).filter(Boolean);
-  if (!list.length) return toast('Tiada resit dipilih.', 'warning');
-  if (list.length === 1) return openReceipt(list[0].id);
-  const html = list.map((t, i) => `<div style="${i < list.length - 1 ? 'page-break-after:always;break-after:page;' : ''}">${receiptHtml(t)}</div>${i < list.length - 1 ? '<div class="no-print" style="border-top:3px dashed #94a3b8;margin:28px -14mm"></div>' : ''}`).join('');
-  openDoc({ title: `${title} · ${list.length} resit`, html, filename: `Resit_Gabungan_${list.length}_${todayStr()}.pdf` });
-}
 
 /* ----- Surat Pengesahan Pelajar ----- */
 function letterDialog(sid) {
@@ -2491,7 +2600,8 @@ function openLetter(s, o) {
     <p style="margin-top:14px">Sekian.</p>
     <p style="margin-top:4px;font-weight:700">"BERILMU, BERAMAL, BERAKHLAK"</p>
     <p style="margin-top:14px">Yang menjalankan amanah,</p>
-    <div class="avoid-break" style="margin-top:46px;width:60%">
+    <div class="avoid-break" style="margin-top:6px;width:60%;position:relative;height:46px">${letterInk()}</div>
+    <div class="avoid-break" style="width:60%">
       <div style="border-top:1px solid #334155;padding-top:4px">
         <b>${esc(st.mudir || '(......................................................)')}</b><br>${esc(st.jawatan || 'Mudir')}<br>${esc(st.nama)}
       </div>
@@ -2520,12 +2630,12 @@ function statementDoc(sid) {
     <div class="d-section">Senarai Resit</div>
     <table class="d-table" style="font-size:10.5px"><thead><tr><th>Tarikh</th><th>No. Resit</th><th>Butiran</th><th>Kaedah</th><th class="t-right">Amaun (RM)</th></tr></thead><tbody>
       ${txs.map(t => `<tr><td>${esc(t.tarikh)}</td><td>${esc(t.noResit)}</td><td>${esc(txDesc(t))}</td><td>${esc(t.kaedah)}</td><td class="t-right">${money(t.jumlah)}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center">Tiada bayaran</td></tr>'}</tbody></table>`);
-  openDoc({ title: `Penyata Yuran ${y}`, html, filename: `Penyata_${y}_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: { tel: s.waris.telefon, text: `Assalamualaikum waris kepada ${s.nama}. Dilampirkan penyata yuran tahun ${y}. ${a.jumlah > 0 ? `Baki tertunggak semasa: RM${money(a.jumlah)}.` : 'Tiada tunggakan.'}\n\n${DB.settings.nama}` } });
+  openDoc({ type: 'laporan', title: `Penyata Yuran ${y}`, html, filename: `Penyata_${y}_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`, share: { tel: s.waris.telefon, text: `Assalamualaikum waris kepada ${s.nama}. Dilampirkan penyata yuran tahun ${y}. ${a.jumlah > 0 ? `Baki tertunggak semasa: RM${money(a.jumlah)}.` : 'Tiada tunggakan.'}\n\n${DB.settings.nama}` } });
 }
 
 /* ----- Laporan PDF ----- */
 function reportShell(title, sub, body) {
-  return `${docHeader()}${docRule()}<div style="text-align:center;margin-top:12px"><div style="font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">${esc(title)}</div><div style="font-size:11px;color:#475569">${sub}</div></div>${body}${docFooter(`Disediakan oleh ${esc(currentUser ? currentUser.nama : '-')}`)}`;
+  return `${docHeader('laporan')}<div style="text-align:center;margin-top:12px"><div style="font-size:15px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">${esc(title)}</div><div style="font-size:11px;color:#475569">${sub}</div></div>${body}${docFooter(`Disediakan oleh ${esc(currentUser ? currentUser.nama : '-')}`)}`;
 }
 function arrearsList() {
   const q = $('rtSearch').value.trim().toUpperCase(), k = $('rtKelas').value;
@@ -2538,7 +2648,7 @@ function arrearsReportDoc() {
   const body = `<table class="d-table" style="margin-top:12px;font-size:10.5px"><thead><tr><th>Bil</th><th>Nama Pelajar</th><th>Kelas</th><th>Waris / Telefon</th><th class="t-right">Sekolah</th><th class="t-right">Makan</th><th class="t-right">Jumlah (RM)</th></tr></thead><tbody>
     ${list.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.s.nama)}</td><td>${esc(x.s.kelas)}</td><td>${esc(x.s.waris.nama)}<br>${esc(x.s.waris.telefon)}</td><td class="t-right">${money(x.a.sekolah)}</td><td class="t-right">${money(x.a.makan)}</td><td class="t-right"><b>${money(x.a.jumlah)}</b></td></tr>`).join('') || '<tr><td colspan="7" style="text-align:center">Tiada tunggakan</td></tr>'}
     <tr><td colspan="6" style="text-align:right;font-weight:800">JUMLAH KESELURUHAN</td><td class="t-right" style="font-weight:800">${money(tot)}</td></tr></tbody></table>`;
-  openDoc({ title: 'Laporan Tunggakan', html: reportShell('Senarai Tunggakan Yuran', `Setakat ${fmtDate(todayStr())} · ${list.length} pelajar`, body), filename: `Laporan_Tunggakan_${todayStr()}.pdf` });
+  openDoc({ type: 'laporan', title: 'Laporan Tunggakan', html: reportShell('Senarai Tunggakan Yuran', `Setakat ${fmtDate(todayStr())} · ${list.length} pelajar`, body), filename: `Laporan_Tunggakan_${todayStr()}.pdf` });
 }
 function txFiltered() {
   const from = $('txFrom').value || '0000-00-00', to = $('txTo').value || '9999-12-31', j = $('txJenis').value;
@@ -2552,7 +2662,7 @@ function txReportDoc() {
   const body = `<table class="d-table" style="margin-top:12px;font-size:10.5px"><thead><tr><th>Tarikh</th><th>No. Resit</th><th>Nama Pelajar</th><th>Jenis / Bulan</th><th>Kaedah</th><th class="t-right">Amaun (RM)</th></tr></thead><tbody>
     ${list.map(t => `<tr><td>${esc(t.tarikh)}</td><td>${esc(t.noResit)}</td><td>${esc(t.nama)}</td><td>${esc(txDesc(t))}</td><td>${esc(t.kaedah)}</td><td class="t-right">${money(t.jumlah)}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center">Tiada transaksi</td></tr>'}
     <tr><td colspan="5" style="text-align:right;font-weight:800">JUMLAH KUTIPAN</td><td class="t-right" style="font-weight:800">${money(tot)}</td></tr></tbody></table>`;
-  openDoc({ title: 'Laporan Transaksi', html: reportShell('Laporan Kutipan Yuran', `${fmtDate($('txFrom').value)} hingga ${fmtDate($('txTo').value)} · ${list.length} transaksi`, body), filename: `Laporan_Kutipan_${$('txFrom').value}_${$('txTo').value}.pdf` });
+  openDoc({ type: 'laporan', title: 'Laporan Transaksi', html: reportShell('Laporan Kutipan Yuran', `${fmtDate($('txFrom').value)} hingga ${fmtDate($('txTo').value)} · ${list.length} transaksi`, body), filename: `Laporan_Kutipan_${$('txFrom').value}_${$('txTo').value}.pdf` });
 }
 function yearSummary(y) {
   return MONTHS.map((m, i) => {
@@ -2567,13 +2677,13 @@ function summaryReportDoc() {
   const body = `<table class="d-table" style="margin-top:12px"><thead><tr><th>Bulan</th><th class="t-right">Yuran Sekolah (RM)</th><th class="t-right">Yuran Makan (RM)</th><th class="t-right">Jumlah (RM)</th><th class="t-right">Bil. Transaksi</th></tr></thead><tbody>
     ${rows.map(r => `<tr><td>${r.m}</td><td class="t-right">${money(r.sek)}</td><td class="t-right">${money(r.mak)}</td><td class="t-right"><b>${money(r.jumlah)}</b></td><td class="t-right">${r.n}</td></tr>`).join('')}
     <tr><td style="font-weight:800">JUMLAH</td><td class="t-right" style="font-weight:800">${money(t('sek'))}</td><td class="t-right" style="font-weight:800">${money(t('mak'))}</td><td class="t-right" style="font-weight:800">${money(t('jumlah'))}</td><td class="t-right" style="font-weight:800">${t('n')}</td></tr></tbody></table>`;
-  openDoc({ title: 'Laporan Tahunan', html: reportShell(`Laporan Kutipan Yuran Tahun ${sumYearVal}`, 'Ringkasan kutipan mengikut bulan (berdasarkan tarikh bayaran)', body), filename: `Laporan_Kutipan_Tahunan_${sumYearVal}.pdf` });
+  openDoc({ type: 'laporan', title: 'Laporan Tahunan', html: reportShell(`Laporan Kutipan Yuran Tahun ${sumYearVal}`, 'Ringkasan kutipan mengikut bulan (berdasarkan tarikh bayaran)', body), filename: `Laporan_Kutipan_Tahunan_${sumYearVal}.pdf` });
 }
 function studentsReportDoc() {
   const list = [...DB.students].sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
   const body = `<table class="d-table" style="margin-top:12px;font-size:10px"><thead><tr><th>Bil</th><th>Nama Pelajar</th><th>No. KP</th><th>Kelas</th><th>Asrama</th><th>Waris</th><th>Telefon</th><th class="t-right">Tunggakan</th></tr></thead><tbody>
     ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(s.nama)}</td><td>${esc(s.kp)}</td><td>${esc(s.kelas)}</td><td>${esc(s.asrama)}</td><td>${esc(s.waris.nama)}</td><td>${esc(s.waris.telefon)}</td><td class="t-right">${money(arrears(s).jumlah)}</td></tr>`).join('') || '<tr><td colspan="8" style="text-align:center">Tiada pelajar</td></tr>'}</tbody></table>`;
-  openDoc({ title: 'Senarai Pelajar', html: reportShell('Senarai Pelajar Berdaftar', `${list.length} pelajar · ${fmtDate(todayStr())}`, body), filename: `Senarai_Pelajar_${todayStr()}.pdf` });
+  openDoc({ type: 'laporan', title: 'Senarai Pelajar', html: reportShell('Senarai Pelajar Berdaftar', `${list.length} pelajar · ${fmtDate(todayStr())}`, body), filename: `Senarai_Pelajar_${todayStr()}.pdf` });
 }
 
 /* =====================================================================
@@ -2704,7 +2814,7 @@ function renderSettings() {
   $('sAmaunPantas').value = by.amaunPantas; $('sSelepas').value = by.selepasBayar; $('sResitPrefix').value = by.resitPrefix;
   $('sPaparBaki').checked = !!by.paparBaki; $('sNotaResit').value = by.notaResit;
   $('sResitEg').textContent = `Contoh: ${(by.resitPrefix || 'R').toUpperCase()}${new Date().getFullYear()}-00001`;
-  $('lhPreview').innerHTML = s.letterhead ? `<img src="${s.letterhead}" class="max-h-28 w-full object-contain">` : 'Tiada kepala surat — pengepala lalai (logo + nama) digunakan';
+  renderAssetsCard(); renderThemeExtras();
   applyBranding(); applyUser(); renderUsers(); updateInstallUI();
   if (currentUser) {
     $('pinStatus').textContent = currentUser.pinHash ? 'PIN aktif — log masuk dengan 4 digit sahaja.' : 'Belum ditetapkan — log masuk perlu kata laluan.';
@@ -2795,27 +2905,11 @@ function saveSettings() {
   if ($('sApplyAll').checked) { DB.students.forEach(st => { st.kadarSekolah = s.kadarSekolah; st.kadarMakan = s.kadarMakan; }); keys.push('students'); }
   if (persist(...keys)) { applyBranding(); renderSettings(); toast('Tetapan disimpan.', 'success'); }
 }
-function uploadLetterhead(e) {
-  const file = e.target.files[0]; e.target.value = ''; if (!file) return;
-  if (!/^image\/(png|jpeg)$/.test(file.type)) return toast('Sila pilih fail PNG atau JPG.', 'error');
-  const img = new Image(), url = URL.createObjectURL(file);
-  img.onload = () => {
-    const maxW = 1600, scale = Math.min(1, maxW / img.width);
-    const c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
-    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
-    URL.revokeObjectURL(url);
-    const old = DB.settings.letterhead;
-    DB.settings.letterhead = c.toDataURL('image/jpeg', 0.85);
-    if (persist('settings')) { renderSettings(); toast('Kepala surat dimuat naik.', 'success'); } else DB.settings.letterhead = old;
-  };
-  img.onerror = () => toast('Imej tidak dapat dibaca.', 'error');
-  img.src = url;
-}
 
 /* ----- Sandaran ----- */
 function backupJson() {
   if (!requireAdmin()) return;
-  const payload = { app: 'MadrasahPro', version: 2, exportedAt: new Date().toISOString(), settings: DB.settings, students: DB.students, transactions: DB.tx };
+  const payload = { app: 'MadrasahPro', version: 2, exportedAt: new Date().toISOString(), settings: DB.settings, students: DB.students, transactions: DB.tx, assets: DB.assets };
   downloadBlob(new Blob([JSON.stringify(payload)], { type: 'application/json' }), `Sandaran_MadrasahPro_${todayStr()}.json`);
   toast(`Sandaran ${DB.students.length} pelajar & ${DB.tx.length} transaksi dimuat turun.`, 'success');
 }
@@ -2831,15 +2925,16 @@ function restoreJson(e) {
       const ok = await confirmModal({ title: 'Pulihkan Sandaran?', icon: 'fa-upload', danger: false, okText: 'Ya, Pulihkan',
         message: `Fail mengandungi <b>${arr.length}</b> pelajar${isV2 ? ` dan <b>${(data.transactions || []).length}</b> transaksi` : ' (format versi lama)'}. Data semasa akan <b>digantikan</b>. Akaun pengguna tidak terjejas.` });
       if (!ok) return;
-      if (data.settings && typeof data.settings === 'object') { const { pin, ...rest } = data.settings; DB.settings = { ...DEFAULT_SETTINGS, ...rest }; DB.settings.bayaran = { ...DEFAULT_BAYARAN, ...(rest.bayaran || {}) }; if (!DB.settings.seq || typeof DB.settings.seq !== 'object') DB.settings.seq = {}; if (!THEME_HEX[DB.settings.tema]) DB.settings.tema = 'emerald'; }
+      if (data.settings && typeof data.settings === 'object') { const { pin, ...rest } = data.settings; DB.settings = { ...DEFAULT_SETTINGS, ...rest }; DB.settings.bayaran = { ...DEFAULT_BAYARAN, ...(rest.bayaran || {}) }; if (!DB.settings.seq || typeof DB.settings.seq !== 'object') DB.settings.seq = {}; if (!THEME_HEX[DB.settings.tema] && DB.settings.tema !== 'custom') DB.settings.tema = 'emerald'; }
       DB.students = []; DB.tx = [];
       if (isV2) {
         const seen = new Set();
         DB.students = data.students.map(normStudent).filter(s => s && !seen.has(s.kp) && seen.add(s.kp));
         const ids = new Set(DB.students.map(s => s.id));
         DB.tx = (data.transactions || []).map(normTx).filter(t => t && ids.has(t.studentId));
+        if (Array.isArray(data.assets)) DB.assets = data.assets.map(normAsset).filter(Boolean);
       } else importLegacyStudents(arr);
-      persist('settings', 'students', 'tx'); applyBranding(); renderCurrent();
+      persist('settings', 'students', 'tx', 'assets'); applyBranding(); renderCurrent();
       toast(`${DB.students.length} pelajar & ${DB.tx.length} transaksi dipulihkan.`, 'success');
     } catch (err) { toast('Fail sandaran tidak sah atau rosak.', 'error'); }
   };
@@ -2856,7 +2951,7 @@ async function wipeAll() {
    PENYEGERAKAN PERANTI (Google Sheet + Apps Script) — luar talian dahulu
    ===================================================================== */
 const SYNC_CFG_KEY = 'mp2_sync', SYNC_META_KEY = 'mp2_syncmeta';
-const SYNC_C = ['students', 'tx', 'users', 'settings'];
+const SYNC_C = ['students', 'tx', 'users', 'settings', 'assets'];
 let syncCfg = readLS(SYNC_CFG_KEY, null) || { enabled: false };
 let syncMeta = null;
 let syncing = false, syncTimer = null, syncState = 'off', syncErr = '';
@@ -2965,6 +3060,7 @@ function applyRemote(list) {
       if (c === 'students') rec = normStudent(ch.d);
       else if (c === 'tx') rec = normTx(ch.d);
       else if (c === 'users') rec = ch.d && ch.d.username && ch.d.hash ? { ...ch.d } : null;
+      else if (c === 'assets') rec = normAsset(ch.d);
       else if (c === 'settings') rec = { ...DEFAULT_SETTINGS, ...ch.d, bayaran: { ...DEFAULT_BAYARAN, ...(ch.d.bayaran || {}) }, id: 'main' };
       if (!rec) return;
       rec._m = ch.m;
@@ -3233,6 +3329,10 @@ function docSearchRender() {
 }
 
 /* ----- Pembantu surat ----- */
+function letterInk() {
+  const c = docCfg(), ttd = assetById(c.ttdId), cop = assetById(c.copId);
+  return `${cop ? `<img src="${cop.data}" alt="Cop" style="position:absolute;left:38%;bottom:-8px;height:64px;transform:rotate(-8deg);opacity:.85">` : ''}${ttd ? `<img src="${ttd.data}" alt="Tandatangan" style="position:absolute;left:0;bottom:0;max-height:46px;max-width:60mm">` : ''}`;
+}
 function letterTop(ref, tarikh, kepadaHtml) {
   return `${docHeader()}${docRule()}
     <table style="width:100%;margin-top:14px;font-size:12.5px"><tr><td></td><td style="width:48%;text-align:right">Ruj. Kami : ${esc(ref)}<br>Tarikh &nbsp;&nbsp;&nbsp;&nbsp; : ${fmtDate(tarikh)}</td></tr></table>
@@ -3243,7 +3343,7 @@ function letterSign(note) {
   return `<p style="margin-top:14px">Sekian.</p>
     <p style="margin-top:4px;font-weight:700">"BERILMU, BERAMAL, BERAKHLAK"</p>
     <p style="margin-top:14px">Yang menjalankan amanah,</p>
-    <div class="avoid-break" style="margin-top:46px;width:60%"><div style="border-top:1px solid #334155;padding-top:4px">
+    <div class="avoid-break" style="margin-top:6px;width:60%;position:relative;height:46px">${letterInk()}</div><div class="avoid-break" style="width:60%"><div style="border-top:1px solid #334155;padding-top:4px">
       <b>${esc(st.mudir || '(......................................................)')}</b><br>${esc(st.jawatan || 'Mudir')}<br>${esc(st.nama)}</div></div>
     ${docFooter(note || 'Surat ini adalah cetakan komputer. Sila hubungi pihak madrasah untuk pengesahan')}`;
 }
@@ -3350,8 +3450,413 @@ function batchArrearsLetters() {
   const list = DB.students.filter(s => !isLunas(s) && (k === 'all' || s.kelas === k) && arrears(s).jumlah >= min).sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
   if (!list.length) return toast('Tiada pelajar sepadan dengan kriteria.', 'info');
   const d = new Date(); d.setDate(d.getDate() + 14);
-  const html = list.map((s, i) => `<div style="${i < list.length - 1 ? 'page-break-after:always;break-after:page;' : ''}">${arrearsLetterHtml(s, { tsurat: todayStr(), akhir: dateStr(d), kali: 1, ref: nextLetterRef('PT') })}</div>${i < list.length - 1 ? '<div class="no-print" style="border-top:3px dashed #94a3b8;margin:28px -14mm"></div>' : ''}`).join('');
-  openDoc({ title: `Surat Peringatan Tunggakan · ${list.length} pelajar`, html, filename: `Peringatan_Tunggakan_Pukal_${todayStr()}.pdf` });
+  const pages = list.map(s => arrearsLetterHtml(s, { tsurat: todayStr(), akhir: dateStr(d), kali: 1, ref: nextLetterRef('PT') }));
+  openDoc({ title: `Surat Peringatan Tunggakan · ${list.length} pelajar`, pages, filename: `Peringatan_Tunggakan_Pukal_${todayStr()}.pdf` });
+}
+
+/* =====================================================================
+   PUSTAKA ASET (kepala surat, logo, tandatangan, cop) + PEMANGKAS IMEJ
+   ===================================================================== */
+const ASSET_TYPES = {
+  letterhead: { label: 'Kepala Surat', icon: 'fa-file-image', out: { w: 1240, h: 1754, fmt: 'image/jpeg' } },
+  logo: { label: 'Logo', icon: 'fa-shield-halved', out: { w: 600, h: 600, fmt: 'image/png' } },
+  ttd: { label: 'Tandatangan', icon: 'fa-signature', out: { w: 700, h: 350, fmt: 'image/png' } },
+  cop: { label: 'Cop Rasmi', icon: 'fa-stamp', out: { w: 600, h: 600, fmt: 'image/png' } },
+  lain: { label: 'Lain-lain', icon: 'fa-image', out: { w: 1400, h: 1400, fmt: 'image/jpeg' } }
+};
+const DEFAULT_DOKUMEN = {
+  logoId: '', letterheadId: '', ttdId: '', copId: '', lhMode: 'page',
+  guna: { resit: true, surat: true, laporan: true },
+  margin: { t: 45, b: 30, l: 18, r: 18, gap: 4 }
+};
+function docCfg() {
+  const d = DB.settings.dokumen || {};
+  return { ...DEFAULT_DOKUMEN, ...d, guna: { ...DEFAULT_DOKUMEN.guna, ...(d.guna || {}) }, margin: { ...DEFAULT_DOKUMEN.margin, ...(d.margin || {}) } };
+}
+function setDocCfg(patch) { DB.settings.dokumen = { ...docCfg(), ...patch }; persist('settings'); }
+function normAsset(o) {
+  if (!o || !o.id || !/^data:image\//.test(String(o.data || ''))) return null;
+  return { id: String(o.id), nama: String(o.nama || 'Aset'), jenis: ASSET_TYPES[o.jenis] ? o.jenis : 'lain', data: o.data, w: +o.w || 0, h: +o.h || 0, dicipta: o.dicipta || new Date().toISOString(), ...(o._m ? { _m: o._m } : {}) };
+}
+function assetById(id) { return id ? DB.assets.find(a => a.id === id) : null; }
+function logoSrc() { const a = assetById(docCfg().logoId); return a ? a.data : (logoOK ? '171855_2.png' : ''); }
+function migrateLetterhead() {
+  if (DB.settings.letterhead && !DB.assets.some(a => a.jenis === 'letterhead')) {
+    const a = normAsset({ id: uid(), nama: 'Kepala Surat (lama)', jenis: 'letterhead', data: DB.settings.letterhead });
+    if (a) { DB.assets.push(a); DB.settings.dokumen = { ...docCfg(), letterheadId: a.id, lhMode: 'header' }; }
+    DB.settings.letterhead = '';
+    persist('assets', 'settings');
+  }
+}
+function assetBytes() { try { return (localStorage.getItem(K.assets) || '').length; } catch (e) { return 0; } }
+
+/* ----- Pemangkas imej (tanpa pustaka luar) ----- */
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+function readFileAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
+async function rotateSrc(src, fmt) {
+  const im = await loadImg(src); const c = document.createElement('canvas');
+  c.width = im.naturalHeight; c.height = im.naturalWidth;
+  const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(im, 0, 0);
+  return c.toDataURL(fmt === 'image/png' ? 'image/png' : 'image/jpeg', 0.95);
+}
+/* Kesan kawasan bukan putih / bukan lutsinar (untuk "buang ruang kosong") */
+async function contentBox(src) {
+  const im = await loadImg(src); const W = im.naturalWidth, H = im.naturalHeight;
+  const sc = Math.min(1, 400 / Math.max(W, H)); const w = Math.max(1, Math.round(W * sc)), h = Math.max(1, Math.round(H * sc));
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.drawImage(im, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let i = 0; i < w; i++) {
+    const k = (y * w + i) * 4; if (d[k + 3] < 20) continue;
+    if (d[k] > 242 && d[k + 1] > 242 && d[k + 2] > 242) continue;
+    if (i < x0) x0 = i; if (i > x1) x1 = i; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) return null;
+  const pad = 3;
+  return { x: Math.max(0, (x0 - pad) / sc), y: Math.max(0, (y0 - pad) / sc), w: Math.min(W, (x1 - x0 + 2 * pad) / sc), h: Math.min(H, (y1 - y0 + 2 * pad) / sc) };
+}
+function openCropper({ src, title = 'Pangkas Imej', presets, preset = 0, fmt = 'image/jpeg', out = { w: 1600, h: 1600 } }) {
+  return new Promise(resolve => {
+    const wrap = document.createElement('div');
+    wrap.className = 'fixed inset-0 z-[85] flex flex-col bg-slate-950 text-white';
+    wrap.innerHTML = `
+      <div class="flex flex-wrap items-center gap-2 px-3 py-3 pt-[max(.75rem,env(safe-area-inset-top))]">
+        <button data-a="cancel" class="rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-xmark mr-1"></i> Batal</button>
+        <p class="mr-auto truncate text-sm font-bold">${esc(title)}</p>
+        <button data-a="ok" class="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-bold"><i class="fa-solid fa-check mr-1"></i> Guna</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 px-3 pb-2 text-xs">
+        <span class="text-white/60">Nisbah:</span>
+        ${presets.map((p, i) => `<button data-p="${i}" class="crop-pre rounded-full px-3 py-1.5 font-semibold ring-1 ring-white/30">${p.label}</button>`).join('')}
+        <span class="mx-1 h-5 w-px bg-white/20"></span>
+        <button data-a="rot" class="rounded-full bg-white/10 px-3 py-1.5 font-semibold"><i class="fa-solid fa-rotate-right mr-1"></i> Putar</button>
+        <button data-a="trim" class="rounded-full bg-white/10 px-3 py-1.5 font-semibold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Buang ruang kosong</button>
+        <button data-a="all" class="rounded-full bg-white/10 px-3 py-1.5 font-semibold"><i class="fa-solid fa-expand mr-1"></i> Penuh</button>
+      </div>
+      <div class="crop-stage relative flex-1 overflow-hidden"><div class="crop-inner absolute"><img class="crop-img block max-w-none select-none" draggable="false"><div class="crop-box absolute cursor-move" style="box-shadow:0 0 0 9999px rgba(2,6,23,.6);outline:2px solid #34d399">
+        <div class="pointer-events-none absolute inset-0" style="background-image:linear-gradient(rgba(255,255,255,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.25) 1px,transparent 1px);background-size:33.33% 33.33%"></div>
+        ${['nw', 'ne', 'sw', 'se'].map(h => `<span data-h="${h}" class="absolute h-6 w-6 rounded-full border-2 border-white bg-emerald-500" style="${h.includes('n') ? 'top:-12px' : 'bottom:-12px'};${h.includes('w') ? 'left:-12px' : 'right:-12px'};cursor:${h}-resize;touch-action:none"></span>`).join('')}
+      </div></div></div>
+      <p class="crop-info px-3 py-2 pb-[max(.5rem,env(safe-area-inset-bottom))] text-center text-[11px] text-white/60">Seret kotak untuk alih · seret bulatan untuk ubah saiz</p>`;
+    document.body.appendChild(wrap);
+    const stage = wrap.querySelector('.crop-stage'), inner = wrap.querySelector('.crop-inner'), img = wrap.querySelector('.crop-img'), box = wrap.querySelector('.crop-box');
+    let cur = src, W = 0, H = 0, sc = 1, aspect = presets[preset].aspect, r = { x: 0, y: 0, w: 0, h: 0 };
+    const draw = () => {
+      Object.assign(box.style, { left: r.x * sc + 'px', top: r.y * sc + 'px', width: r.w * sc + 'px', height: r.h * sc + 'px' });
+      wrap.querySelector('.crop-info').textContent = `${Math.round(r.w)} × ${Math.round(r.h)} px · seret kotak untuk alih, seret bulatan untuk ubah saiz`;
+      wrap.querySelectorAll('.crop-pre').forEach(b => b.classList.toggle('bg-emerald-500', +b.dataset.p === preset));
+    };
+    const fitRect = () => {
+      if (!aspect) { r = { x: W * 0.05, y: H * 0.05, w: W * 0.9, h: H * 0.9 }; return; }
+      let w = W, h = w / aspect; if (h > H) { h = H; w = h * aspect; }
+      r = { x: (W - w) / 2, y: (H - h) / 2, w, h };
+    };
+    const layout = () => {
+      const sw = stage.clientWidth - 24, sh = stage.clientHeight - 24;
+      sc = Math.min(sw / W, sh / H, 1.5);
+      img.style.width = W * sc + 'px'; img.style.height = H * sc + 'px';
+      inner.style.left = (stage.clientWidth - W * sc) / 2 + 'px'; inner.style.top = (stage.clientHeight - H * sc) / 2 + 'px';
+      draw();
+    };
+    const load = async (s, keep) => { cur = s; const im = await loadImg(s); W = im.naturalWidth; H = im.naturalHeight; img.src = s; if (!keep) fitRect(); layout(); };
+    const clamp = () => {
+      r.w = Math.max(20, Math.min(r.w, W)); r.h = Math.max(20, Math.min(r.h, H));
+      r.x = Math.max(0, Math.min(r.x, W - r.w)); r.y = Math.max(0, Math.min(r.y, H - r.h));
+    };
+    let drag = null;
+    box.addEventListener('pointerdown', e => {
+      e.preventDefault(); box.setPointerCapture(e.pointerId);
+      drag = { h: e.target.dataset.h || 'move', sx: e.clientX, sy: e.clientY, r0: { ...r } };
+    });
+    box.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const dx = (e.clientX - drag.sx) / sc, dy = (e.clientY - drag.sy) / sc, o = drag.r0;
+      if (drag.h === 'move') { r.x = o.x + dx; r.y = o.y + dy; clamp(); return draw(); }
+      let x0 = o.x, y0 = o.y, x1 = o.x + o.w, y1 = o.y + o.h;
+      if (drag.h.includes('w')) x0 = Math.min(x1 - 20, Math.max(0, o.x + dx)); else x1 = Math.max(x0 + 20, Math.min(W, x1 + dx));
+      if (drag.h.includes('n')) y0 = Math.min(y1 - 20, Math.max(0, o.y + dy)); else y1 = Math.max(y0 + 20, Math.min(H, y1 + dy));
+      let w = x1 - x0, h = y1 - y0;
+      if (aspect) {
+        if (w / h > aspect) w = h * aspect; else h = w / aspect;
+        if (drag.h.includes('w')) x0 = x1 - w; if (drag.h.includes('n')) y0 = y1 - h;
+      }
+      r = { x: x0, y: y0, w, h }; clamp(); draw();
+    });
+    box.addEventListener('pointerup', () => { drag = null; });
+    const onResize = () => layout();
+    window.addEventListener('resize', onResize);
+    const done = v => { window.removeEventListener('resize', onResize); wrap.remove(); resolve(v); };
+    wrap.addEventListener('click', async e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.p !== undefined) { preset = +b.dataset.p; aspect = presets[preset].aspect; fitRect(); return draw(); }
+      const a = b.dataset.a;
+      if (a === 'cancel') return done(null);
+      if (a === 'rot') return load(await rotateSrc(cur, fmt));
+      if (a === 'all') { r = { x: 0, y: 0, w: W, h: H }; if (aspect) fitRect(); return draw(); }
+      if (a === 'trim') {
+        const bx = await contentBox(cur); if (!bx) return toast('Tiada kandungan dikesan.', 'info');
+        r = bx; if (aspect) { const cx = r.x + r.w / 2, cy = r.y + r.h / 2; let w = r.w, h = r.h; if (w / h > aspect) h = w / aspect; else w = h * aspect; r = { x: cx - w / 2, y: cy - h / 2, w, h }; }
+        clamp(); return draw();
+      }
+      if (a === 'ok') {
+        const im = await loadImg(cur);
+        const s2 = Math.min(1, out.w / r.w, out.h / r.h);
+        const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(r.w * s2)); c.height = Math.max(1, Math.round(r.h * s2));
+        const x = c.getContext('2d');
+        if (fmt !== 'image/png') { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
+        x.imageSmoothingQuality = 'high';
+        x.drawImage(im, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
+        done({ data: c.toDataURL(fmt, fmt === 'image/png' ? undefined : 0.88), w: c.width, h: c.height });
+      }
+    });
+    requestAnimationFrame(() => load(src));
+  });
+}
+function cropPresets(jenis) {
+  if (jenis === 'letterhead') return [{ label: 'A4 penuh', aspect: 210 / 297 }, { label: 'Jalur kepala', aspect: null }, { label: 'Bebas', aspect: null }];
+  if (jenis === 'logo' || jenis === 'cop') return [{ label: '1:1 Segi empat', aspect: 1 }, { label: 'Bebas', aspect: null }];
+  if (jenis === 'ttd') return [{ label: 'Bebas', aspect: null }, { label: '2:1', aspect: 2 }];
+  return [{ label: 'Bebas', aspect: null }, { label: 'A4', aspect: 210 / 297 }, { label: '1:1', aspect: 1 }];
+}
+
+/* ----- Tambah / pangkas / padam aset ----- */
+function pickFile(accept) {
+  return new Promise(res => {
+    const i = document.createElement('input'); i.type = 'file'; i.accept = accept;
+    i.onchange = () => res(i.files[0] || null); i.click();
+  });
+}
+function addAssetDialog(jenisDefault = 'letterhead') {
+  if (!requireAdmin()) return;
+  formDialog({ title: 'Muat Naik Aset', okText: 'Pilih Fail',
+    html: `<div><label class="label">Jenis Aset</label><select name="jenis" class="field">${Object.entries(ASSET_TYPES).map(([k, v]) => `<option value="${k}" ${k === jenisDefault ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
+      <div><label class="label">Nama (pilihan)</label><input name="nama" class="field" placeholder="cth: Kepala Surat Rasmi 2026"></div>
+      <p class="rounded-xl bg-slate-50 p-3 text-xs text-slate-600"><i class="fa-solid fa-circle-info mr-1"></i> Format PNG atau JPG. Untuk kepala surat dalam PDF/Word, ambil tangkapan skrin atau eksport sebagai imej dahulu. Selepas memilih fail, anda boleh <b>pangkas</b> dan <b>putar</b> imej.</p>`,
+    onSubmit: b => { const jenis = b.querySelector('[name="jenis"]').value, nama = b.querySelector('[name="nama"]').value.trim(); setTimeout(() => uploadAsset(jenis, nama), 50); }
+  });
+}
+async function uploadAsset(jenis, nama, replaceId = null) {
+  const f = await pickFile('image/png,image/jpeg,image/webp'); if (!f) return;
+  if (!/^image\//.test(f.type)) return toast('Sila pilih fail imej (PNG/JPG).', 'error');
+  const src = await readFileAsDataURL(f);
+  const t = ASSET_TYPES[jenis];
+  const res = await openCropper({ src, title: `Pangkas ${t.label}`, presets: cropPresets(jenis), fmt: t.out.fmt, out: t.out });
+  if (!res) return;
+  saveAsset({ id: replaceId || uid(), nama: nama || `${t.label} ${new Date().toLocaleDateString('ms-MY')}`, jenis, ...res });
+}
+async function recropAsset(id) {
+  const a = assetById(id); if (!a || !requireAdmin()) return;
+  const t = ASSET_TYPES[a.jenis];
+  const res = await openCropper({ src: a.data, title: `Pangkas ${a.nama}`, presets: cropPresets(a.jenis), fmt: t.out.fmt, out: t.out });
+  if (res) saveAsset({ ...a, ...res });
+}
+function saveAsset(rec) {
+  const a = normAsset(rec); if (!a) return toast('Imej tidak sah.', 'error');
+  const i = DB.assets.findIndex(x => x.id === a.id);
+  const backup = DB.assets.slice();
+  if (i >= 0) DB.assets[i] = a; else DB.assets.push(a);
+  if (!persist('assets')) { DB.assets = backup; return; }
+  const c = docCfg(), patch = {};
+  if (a.jenis === 'letterhead' && !c.letterheadId) patch.letterheadId = a.id;
+  if (a.jenis === 'logo' && !c.logoId) patch.logoId = a.id;
+  if (a.jenis === 'ttd' && !c.ttdId) patch.ttdId = a.id;
+  if (a.jenis === 'cop' && !c.copId) patch.copId = a.id;
+  if (Object.keys(patch).length) setDocCfg(patch);
+  toast(`${ASSET_TYPES[a.jenis].label} disimpan.`, 'success');
+  renderSettings();
+  if (a.jenis === 'letterhead' && (docCfg().letterheadId === a.id)) setTimeout(() => {
+    if (a.h / a.w > 1.2) { setDocCfg({ lhMode: 'page' }); autoMargins(true); }
+    else { setDocCfg({ lhMode: 'header' }); marginEditor(); }
+  }, 300);
+  if (a.jenis === 'logo' && docCfg().logoId === a.id) setTimeout(() => suggestThemeFromLogo(true), 300);
+}
+async function deleteAsset(id) {
+  const a = assetById(id); if (!a || !requireAdmin()) return;
+  if (!await confirmModal({ title: 'Padam Aset?', message: `<b>${esc(a.nama)}</b> akan dipadam daripada semua peranti.` })) return;
+  DB.assets = DB.assets.filter(x => x.id !== id);
+  const c = docCfg(), patch = {};
+  ['logoId', 'letterheadId', 'ttdId', 'copId'].forEach(k => { if (c[k] === id) patch[k] = ''; });
+  persist('assets'); if (Object.keys(patch).length) setDocCfg(patch);
+  renderSettings(); toast('Aset dipadam.', 'info');
+}
+function useAsset(id) {
+  const a = assetById(id); if (!a || !requireAdmin()) return;
+  const key = { letterhead: 'letterheadId', logo: 'logoId', ttd: 'ttdId', cop: 'copId' }[a.jenis];
+  if (!key) return toast('Aset jenis ini tidak digunakan secara automatik.', 'info');
+  setDocCfg({ [key]: id }); renderSettings(); toast(`${ASSET_TYPES[a.jenis].label} aktif: ${a.nama}`, 'success');
+  if (a.jenis === 'logo') suggestThemeFromLogo(true);
+}
+function downloadAsset(id) {
+  const a = assetById(id); if (!a) return;
+  const l = document.createElement('a'); l.href = a.data; l.download = `${a.nama.replace(/[^a-z0-9]+/gi, '_')}.${a.data.startsWith('data:image/png') ? 'png' : 'jpg'}`; document.body.appendChild(l); l.click(); l.remove();
+}
+
+/* ----- Jarak teks pada kepala surat (pratonton langsung) ----- */
+async function detectMargins(src) {
+  const im = await loadImg(src);
+  const W = 210, H = 297; const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.drawImage(im, 0, 0, W, H);
+  const d = x.getImageData(0, 0, W, H).data;
+  const ink = (i, j) => { const k = (j * W + i) * 4; return (d[k] + d[k + 1] + d[k + 2]) / 3 < 232; };
+  const rowInk = j => { let n = 0; for (let i = 0; i < W; i++) if (ink(i, j)) n++; return n / W; };
+  const rows = Array.from({ length: H }, (_, j) => rowInk(j));
+  const blank = j => rows[j] < 0.006;
+  let top = 0;
+  for (let j = 0; j < H * 0.5; j++) { let ok = true; for (let k = j; k < j + 8; k++) if (!blank(k)) { ok = false; break; } if (ok) { top = j; break; } }
+  let bot = H;
+  for (let j = H - 1; j > H * 0.5; j--) { let ok = true; for (let k = j; k > j - 8; k--) if (!blank(k)) { ok = false; break; } if (ok) { bot = j; break; } }
+  const t = Math.round(Math.min(110, top + 6)), b = Math.round(Math.min(90, H - bot + 6));
+  const colInk = i => { let n = 0; for (let j = t; j < H - b; j++) if (ink(i, j)) n++; return n / Math.max(1, H - b - t); };
+  let l = 0; for (let i = 0; i < W * 0.3; i++) { if (colInk(i) < 0.01) { l = i; break; } }
+  let r = 0; for (let i = W - 1; i > W * 0.7; i--) { if (colInk(i) < 0.01) { r = W - 1 - i; break; } }
+  return { t: Math.max(top > 0 ? t : 20, 12), b: Math.max(b, 12), l: Math.max(l + 6, 15), r: Math.max(r + 6, 15) };
+}
+async function autoMargins(openAfter) {
+  const a = assetById(docCfg().letterheadId); if (!a) return;
+  const m = await detectMargins(a.data);
+  setDocCfg({ margin: { ...docCfg().margin, ...m } });
+  toast(`Jarak dikesan automatik: atas ${m.t}mm, bawah ${m.b}mm. Semak & laras jika perlu.`, 'success');
+  if (openAfter) marginEditor();
+}
+function marginEditor() {
+  const c = docCfg(), a = assetById(c.letterheadId);
+  if (!a) return toast('Muat naik kepala surat dahulu.', 'warning');
+  const page = c.lhMode === 'page', PW = 252, PS = PW / 210;
+  const sliders = page ? [['t', 'Jarak Atas', 0, 140], ['b', 'Jarak Bawah', 0, 120], ['l', 'Jarak Kiri', 5, 60], ['r', 'Jarak Kanan', 5, 60]] : [['gap', 'Jarak selepas kepala surat', 0, 30], ['l', 'Jarak Kiri', 5, 40], ['r', 'Jarak Kanan', 5, 40]];
+  const m = { ...c.margin };
+  formDialog({ title: 'Laras Kedudukan Teks', okText: 'Simpan',
+    html: `<p class="text-xs text-slate-500">Pastikan kotak hijau (ruang teks) tidak bertindih dengan corak kepala surat.</p>
+      <div class="flex justify-center"><div id="mePage" class="relative overflow-hidden bg-white shadow-lg ring-1 ring-slate-200" style="width:${PW}px;height:${Math.round(297 * PS)}px;${page ? `background:url(${a.data}) 0 0/100% 100% no-repeat` : ''}">
+        ${page ? '' : `<img src="${a.data}" style="width:100%;display:block">`}
+        <div id="meBox" class="absolute border-2 border-dashed border-emerald-500 bg-emerald-400/10">
+          <div class="p-1.5">${'<div class="mb-1 h-1.5 rounded bg-slate-400/60"></div>'.repeat(2)}<div class="mb-2 h-2 w-2/3 rounded bg-slate-700/70"></div>${'<div class="mb-1 h-1 rounded bg-slate-300"></div>'.repeat(14)}</div>
+        </div></div></div>
+      ${sliders.map(([k, l, mn, mx]) => `<div><div class="flex justify-between text-xs font-semibold text-slate-600"><span>${l}</span><span><b data-v="${k}">${m[k]}</b> mm</span></div><input type="range" data-k="${k}" min="${mn}" max="${mx}" value="${m[k]}" class="w-full accent-emerald-600"></div>`).join('')}
+      ${page ? '<button type="button" id="meAuto" class="w-full rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Kesan Automatik</button>' : ''}`,
+    onOpen: body => {
+      const box = body.querySelector('#meBox'), pg = body.querySelector('#mePage');
+      const upd = () => {
+        body.querySelectorAll('[data-v]').forEach(el => el.textContent = m[el.dataset.v]);
+        if (page) Object.assign(box.style, { top: m.t * PS + 'px', bottom: m.b * PS + 'px', left: m.l * PS + 'px', right: m.r * PS + 'px' });
+        else { const ih = (pg.querySelector('img') || {}).offsetHeight || 0; Object.assign(box.style, { top: ih + m.gap * PS + 'px', bottom: 14 * PS + 'px', left: m.l * PS + 'px', right: m.r * PS + 'px' }); }
+      };
+      body.querySelectorAll('input[type=range]').forEach(i => i.addEventListener('input', () => { m[i.dataset.k] = +i.value; upd(); }));
+      const img = pg.querySelector('img'); if (img && !img.complete) img.onload = upd;
+      const au = body.querySelector('#meAuto');
+      if (au) au.addEventListener('click', async () => { Object.assign(m, await detectMargins(a.data)); body.querySelectorAll('input[type=range]').forEach(i => { i.value = m[i.dataset.k]; }); upd(); });
+      upd();
+    },
+    onSubmit: () => {
+      setDocCfg({ margin: m });
+      const last = [...DB.tx].sort((x, y) => String(y.dicipta).localeCompare(String(x.dicipta)))[0];
+      toast('Kedudukan teks disimpan.', 'success', last ? { label: 'Lihat Contoh Resit', fn: () => openReceipt(last.id) } : null);
+    } });
+}
+
+/* ----- Warna tema dari logo ----- */
+function hexToRgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function rgbToHex(r, g, b) { return '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join(''); }
+function rgbToHsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2; if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h /= 6; } return [h * 360, s, l]; }
+function hslToRgb(h, s, l) { h /= 360; const f = n => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); }; return [f(0), f(8), f(4)]; }
+function paletteFromHex(hex) {
+  const [h, s0] = rgbToHsl(...hexToRgb(hex)); const s = Math.max(.35, Math.min(.85, s0));
+  const L = { 50: .96, 100: .9, 500: .5, 600: .41, 700: .34, 800: .27, 900: .21 };
+  const out = {}; Object.entries(L).forEach(([k, l]) => { out[k] = hslToRgb(h, k >= 500 ? s : Math.min(s, .7), l).map(Math.round).join(' '); });
+  return out;
+}
+function applyCustomTheme() {
+  const st = document.body.style;
+  ['50', '100', '500', '600', '700', '800', '900'].forEach(k => st.removeProperty('--p-' + k));
+  if (DB.settings.tema === 'custom' && /^#[0-9a-f]{6}$/i.test(DB.settings.temaHex || '')) {
+    const p = paletteFromHex(DB.settings.temaHex);
+    Object.entries(p).forEach(([k, v]) => st.setProperty('--p-' + k, v));
+    return rgbToHex(...p[600].split(' ').map(Number));
+  }
+  return null;
+}
+async function logoPalette(src) {
+  const im = await loadImg(src); const n = 80; const c = document.createElement('canvas'); c.width = n; c.height = n;
+  const x = c.getContext('2d'); x.drawImage(im, 0, 0, n, n); const d = x.getImageData(0, 0, n, n).data;
+  const bins = {};
+  for (let k = 0; k < d.length; k += 4) {
+    if (d[k + 3] < 128) continue;
+    const [h, s, l] = rgbToHsl(d[k], d[k + 1], d[k + 2]);
+    if (s < .25 || l > .88 || l < .12) continue;
+    const b = Math.round(h / 15) % 24;
+    const e = bins[b] || (bins[b] = { n: 0, r: 0, g: 0, bl: 0, h: 0 });
+    e.n++; e.r += d[k]; e.g += d[k + 1]; e.bl += d[k + 2]; e.h = h;
+  }
+  const sorted = Object.values(bins).sort((a, b) => b.n - a.n);
+  const out = [];
+  for (const e of sorted) { if (out.length >= 4) break; const hex = rgbToHex(e.r / e.n, e.g / e.n, e.bl / e.n); if (!out.some(o => Math.abs(rgbToHsl(...hexToRgb(o))[0] - e.h) < 20)) out.push(hex); }
+  return out;
+}
+async function suggestThemeFromLogo(auto = false) {
+  const src = logoSrc(); if (!src) return auto ? null : toast('Muat naik logo dahulu.', 'warning');
+  let pal = []; try { pal = await logoPalette(src); } catch (e) {}
+  if (!pal.length) return auto ? null : toast('Tiada warna menonjol dikesan pada logo.', 'info');
+  formDialog({ title: 'Cadangan Warna Tema dari Logo', okText: 'Tutup',
+    html: `<div class="flex justify-center"><img src="${src}" class="h-20 w-20 rounded-xl object-contain ring-1 ring-slate-200"></div>
+      <p class="text-center text-xs text-slate-500">Tekan warna untuk guna sebagai tema aplikasi, resit &amp; surat.</p>
+      <div class="grid grid-cols-2 gap-3">${pal.map(h => `<button type="button" data-hex="${h}" class="flex items-center gap-3 rounded-xl p-3 text-left ring-1 ring-slate-200 hover:ring-2 hover:ring-slate-400"><span class="h-10 w-10 shrink-0 rounded-full shadow" style="background:${h}"></span><span><span class="block text-sm font-bold">${h.toUpperCase()}</span><span class="block text-[11px] text-slate-500">Guna warna ini</span></span></button>`).join('')}</div>`,
+    onOpen: b => b.querySelectorAll('[data-hex]').forEach(x => x.addEventListener('click', () => {
+      DB.settings.tema = 'custom'; DB.settings.temaHex = x.dataset.hex; persist('settings'); applyBranding(); renderSettings();
+      toast('Warna tema dikemas kini.', 'success');
+    })),
+    onSubmit: () => true });
+}
+
+/* ----- Kad tetapan aset & dokumen ----- */
+function renderAssetsCard() {
+  const box = $('assetBody'); if (!box || !isAdmin()) return;
+  const c = docCfg();
+  const usedAs = a => [c.logoId === a.id && 'Logo aktif', c.letterheadId === a.id && 'Kepala surat aktif', c.ttdId === a.id && 'Tandatangan aktif', c.copId === a.id && 'Cop aktif'].filter(Boolean).join(' · ');
+  const opts = (jenis, sel, none) => `<option value="">${none}</option>` + DB.assets.filter(a => a.jenis === jenis).map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.nama)}</option>`).join('');
+  const kb = Math.round(assetBytes() / 1024);
+  box.innerHTML = `
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      ${DB.assets.map(a => `<div class="overflow-hidden rounded-xl ring-1 ${usedAs(a) ? 'ring-2 ring-primary-500' : 'ring-slate-200'}">
+        <div class="flex h-28 items-center justify-center bg-[length:12px_12px] p-2" style="background-image:linear-gradient(45deg,#f1f5f9 25%,transparent 25%,transparent 75%,#f1f5f9 75%),linear-gradient(45deg,#f1f5f9 25%,transparent 25%,transparent 75%,#f1f5f9 75%);background-position:0 0,6px 6px"><img src="${a.data}" class="max-h-full max-w-full object-contain shadow-sm"></div>
+        <div class="p-2"><p class="truncate text-xs font-bold">${esc(a.nama)}</p><p class="truncate text-[10px] text-slate-500"><i class="fa-solid ${ASSET_TYPES[a.jenis].icon} mr-1"></i>${ASSET_TYPES[a.jenis].label}${usedAs(a) ? ` · <b class="text-primary-700">${usedAs(a)}</b>` : ''}</p>
+          <div class="mt-2 grid grid-cols-4 gap-1">
+            <button onclick="useAsset('${a.id}')" title="Guna" class="rounded-lg bg-primary-50 py-1.5 text-xs text-primary-700"><i class="fa-solid fa-check"></i></button>
+            <button onclick="recropAsset('${a.id}')" title="Pangkas" class="rounded-lg bg-slate-100 py-1.5 text-xs text-slate-700"><i class="fa-solid fa-crop-simple"></i></button>
+            <button onclick="downloadAsset('${a.id}')" title="Muat turun" class="rounded-lg bg-slate-100 py-1.5 text-xs text-slate-700"><i class="fa-solid fa-download"></i></button>
+            <button onclick="deleteAsset('${a.id}')" title="Padam" class="rounded-lg bg-rose-50 py-1.5 text-xs text-rose-600"><i class="fa-solid fa-trash-can"></i></button>
+          </div></div></div>`).join('')}
+      <button onclick="addAssetDialog()" class="flex h-full min-h-[11rem] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 text-sm font-semibold text-slate-500 hover:border-primary-400 hover:text-primary-700"><i class="fa-solid fa-cloud-arrow-up text-2xl"></i> Muat Naik Aset</button>
+    </div>
+    <p class="mt-2 text-[11px] text-slate-400">Storan aset: ${kb} KB${kb > 2500 ? ' — <b class="text-amber-600">besar; pertimbang memadam aset tidak digunakan</b>' : ''}</p>
+
+    <div class="mt-5 space-y-3 border-t border-slate-100 pt-4">
+      <p class="text-sm font-bold">Tetapan Dokumen</p>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="label">Logo</label><select data-dc="logoId" class="field">${opts('logo', c.logoId, logoOK ? 'Lalai (171855_2.png)' : 'Ikon lalai')}</select></div>
+        <div><label class="label">Kepala Surat</label><select data-dc="letterheadId" class="field">${opts('letterhead', c.letterheadId, 'Tiada (guna logo + nama)')}</select></div>
+        <div><label class="label">Tandatangan</label><select data-dc="ttdId" class="field">${opts('ttd', c.ttdId, 'Tiada')}</select></div>
+        <div><label class="label">Cop Rasmi</label><select data-dc="copId" class="field">${opts('cop', c.copId, 'Tiada')}</select></div>
+      </div>
+      ${c.letterheadId ? `
+      <div><span class="label">Jenis Kepala Surat</span>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setDocCfg({lhMode:'page'});renderSettings()" class="rounded-xl p-3 text-left text-xs ring-1 ${c.lhMode === 'page' ? 'bg-primary-50 ring-2 ring-primary-500' : 'ring-slate-200'}"><b class="block text-sm"><i class="fa-solid fa-file mr-1"></i> Halaman penuh A4</b>Corak kepala &amp; kaki dijadikan latar halaman</button>
+          <button onclick="setDocCfg({lhMode:'header'});renderSettings()" class="rounded-xl p-3 text-left text-xs ring-1 ${c.lhMode === 'header' ? 'bg-primary-50 ring-2 ring-primary-500' : 'ring-slate-200'}"><b class="block text-sm"><i class="fa-solid fa-heading mr-1"></i> Jalur kepala</b>Imej di bahagian atas sahaja</button>
+        </div></div>
+      <div><span class="label">Guna kepala surat pada</span>
+        <div class="flex flex-wrap gap-2">${[['resit', 'Resit'], ['surat', 'Surat'], ['laporan', 'Laporan &amp; Penyata']].map(([k, l]) => `<label class="flex cursor-pointer items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-semibold ring-1 ring-slate-200"><input type="checkbox" data-guna="${k}" ${c.guna[k] ? 'checked' : ''}> ${l}</label>`).join('')}</div>
+        ${c.lhMode === 'page' ? '<p class="mt-1 text-[11px] text-slate-500">Laporan panjang menggunakan pengepala logo (halaman penuh hanya untuk resit &amp; surat).</p>' : ''}</div>
+      <button onclick="marginEditor()" class="w-full rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-ruler-combined mr-1"></i> Laras Kedudukan Teks</button>` : ''}
+    </div>`;
+  box.querySelectorAll('[data-dc]').forEach(s => s.addEventListener('change', () => { setDocCfg({ [s.dataset.dc]: s.value }); renderSettings(); if (s.dataset.dc === 'logoId' && s.value) suggestThemeFromLogo(true); }));
+  box.querySelectorAll('[data-guna]').forEach(i => i.addEventListener('change', () => setDocCfg({ guna: { ...docCfg().guna, [i.dataset.guna]: i.checked } })));
+}
+async function renderThemeExtras() {
+  const box = $('logoSwatches'); if (!box) return;
+  const src = logoSrc();
+  $('sTemaHex').value = DB.settings.temaHex || '#059669';
+  if (!src) { box.innerHTML = '<span class="text-[11px] text-slate-400">Muat naik logo untuk cadangan warna.</span>'; return; }
+  let pal = []; try { pal = await logoPalette(src); } catch (e) {}
+  box.innerHTML = pal.length ? '<span class="text-[11px] font-semibold text-slate-500">Dari logo:</span>' + pal.map(h => `<button type="button" title="${h}" onclick="DB.settings.tema='custom';DB.settings.temaHex='${h}';applyBranding();renderThemeExtras()" class="h-8 w-8 rounded-full shadow ring-2 ${DB.settings.tema === 'custom' && DB.settings.temaHex === h ? 'ring-slate-800' : 'ring-white'}" style="background:${h}"></button>`).join('') : '<span class="text-[11px] text-slate-400">Tiada warna menonjol pada logo.</span>';
 }
 
 /* ---------- PWA ---------- */
@@ -3393,6 +3898,7 @@ async function init() {
   migrateV1();
   await ensureAdmin();
   ensureUserCodes();
+  migrateLetterhead();
   applyBranding();
   initStudentForm();
   initPWA();
@@ -3441,9 +3947,8 @@ async function init() {
   $('themePicker').addEventListener('click', e => { const b = e.target.closest('[data-theme-opt]'); if (!b || !isAdmin()) return; DB.settings.tema = b.dataset.themeOpt; applyBranding(); });
   $('btnSaveSettings').addEventListener('click', saveSettings);
   $('btnPw').addEventListener('click', changeOwnPw);
-  $('btnLh').addEventListener('click', () => $('fileLh').click());
-  $('fileLh').addEventListener('change', uploadLetterhead);
-  $('btnLhDel').addEventListener('click', () => { DB.settings.letterhead = ''; persist('settings'); renderSettings(); toast('Kepala surat dibuang.', 'info'); });
+  $('sTemaHex').addEventListener('input', e => { if (!isAdmin()) return; DB.settings.tema = 'custom'; DB.settings.temaHex = e.target.value; applyBranding(); });
+  $('sTemaHex').addEventListener('change', () => renderThemeExtras());
   $('btnBackup').addEventListener('click', backupJson);
   $('btnRestore').addEventListener('click', () => $('fileJson').click());
   $('fileJson').addEventListener('change', restoreJson);

@@ -45,6 +45,13 @@ Data disegerak melalui **Google Sheet milik madrasah** (percuma). Sistem berfung
 
 Setiap pengguna mempunyai siri no. resit sendiri (cth: `R2026-H0001`) supaya tiada nombor bertindih antara peranti.
 
+## Aset & Dokumen Rasmi (Tetapan → Aset & Dokumen Rasmi)
+- Muat naik **kepala surat rasmi, logo, tandatangan & cop** — setiap aset boleh **dipangkas** (A4 penuh, jalur kepala, 1:1, bebas), **diputar** dan **buang ruang kosong** automatik.
+- Kepala surat **halaman penuh A4** (corak kepala & kaki sebagai latar) atau **jalur kepala**.
+- **Laras Kedudukan Teks** dengan pratonton langsung + **kesan jarak automatik** supaya teks tidak bertindih dengan corak.
+- Pilih guna kepala surat pada Resit / Surat / Laporan, dan butang **Kepala Surat: Hidup/Mati** pada setiap dokumen.
+- **Cadangan warna tema** automatik daripada logo, atau pilih warna sendiri.
+
 ## Nota
 - Logo lalai resit: muat naik `171855_2.png` ke folder utama repo (atau guna kepala surat di Tetapan).
 - Data disimpan dalam peranti (localStorage). Gunakan **Muat Turun Sandaran** untuk backup / pindah peranti.
