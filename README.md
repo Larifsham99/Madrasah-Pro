@@ -18,7 +18,7 @@ Sistem pengurusan madrasah — pelajar & waris, kutipan yuran bulanan, resit, su
 | Dokumen | Surat Pengesahan Pelajar, muat naik kepala surat (PNG/JPG), format A4 sedia cetak/PDF |
 | Laporan | Kutipan harian/bulanan/tahunan, senarai tunggakan, eksport CSV (Excel) & PDF |
 | Tetapan Bayaran | Kadar lalai, jenis yuran lalai, kaedah bayaran, butang amaun pantas, tindakan selepas bayar, awalan no. resit, nota resit |
-| Keselamatan | Log masuk Admin/Kerani berkata laluan, kunci automatik 15 minit |
+| Keselamatan & Log Masuk | Pilih nama (tiada taip), PIN 4 digit, kekal log masuk pada peranti, kunci skrin automatik boleh laras, Admin/Kerani |
 
 ## Struktur Yuran
 - **Yuran Sekolah**: dikenakan **sekali setahun**; boleh dibayar secara **ansuran**.

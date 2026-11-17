@@ -118,24 +118,42 @@
       <h1 class="text-2xl font-extrabold tracking-tight">Madrasah Pro</h1>
       <p class="brand-name mt-1 text-sm text-white/80">Madrasah Misbahul Falah</p>
     </div>
-    <form id="loginForm" class="rounded-2xl bg-white p-6 shadow-2xl" autocomplete="on">
-      <h2 class="text-lg font-extrabold">Log Masuk</h2>
-      <p class="mb-5 text-xs text-slate-500">Akses untuk Admin dan Kerani berdaftar sahaja.</p>
-      <label class="label" for="lgUser">Nama Pengguna</label>
-      <div class="relative mb-4">
-        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-user"></i></span>
-        <input id="lgUser" class="field pl-9" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="cth: admin">
+    <div class="rounded-2xl bg-white p-6 shadow-2xl">
+      <!-- Langkah 1: pilih akaun -->
+      <div id="lgStepUser">
+        <h2 class="text-lg font-extrabold">Siapa anda?</h2>
+        <p class="text-xs text-slate-500">Tekan nama anda untuk log masuk.</p>
+        <div id="lgUsers" class="mt-4 grid grid-cols-2 gap-3"></div>
       </div>
-      <label class="label" for="lgPass">Kata Laluan</label>
-      <div class="relative">
-        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-key"></i></span>
-        <input id="lgPass" class="field px-9" type="password" autocomplete="current-password" placeholder="••••••••">
-        <button type="button" id="lgEye" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400" aria-label="Papar kata laluan"><i class="fa-solid fa-eye"></i></button>
+      <!-- Langkah 2: PIN / kata laluan -->
+      <div id="lgStepAuth" class="hidden">
+        <div class="flex items-center gap-3">
+          <span id="lgAvatar" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-100 text-lg font-extrabold text-primary-700">A</span>
+          <div class="min-w-0 flex-1"><p id="lgName" class="truncate font-extrabold">-</p><p id="lgRole" class="text-xs text-slate-500">-</p></div>
+          <button type="button" id="lgSwitch" onclick="lgBack()" class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">Tukar</button>
+        </div>
+        <div id="lgPinBox" class="mt-5 hidden text-center">
+          <p class="text-sm font-semibold text-slate-600">Masukkan PIN</p>
+          <div id="lgPinDots" class="mt-3 flex justify-center gap-4"></div>
+          <div id="lgPad" class="mx-auto mt-5 grid max-w-[260px] grid-cols-3 gap-3"></div>
+          <button type="button" onclick="lgSetMode('pw')" class="mt-4 text-xs font-semibold text-primary-700">Guna kata laluan</button>
+        </div>
+        <form id="loginForm" class="mt-5 hidden" autocomplete="on">
+          <input id="lgUser" type="text" autocomplete="username" class="hidden" tabindex="-1" aria-hidden="true">
+          <label class="label" for="lgPass">Kata Laluan</label>
+          <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-key"></i></span>
+            <input id="lgPass" class="field px-9" type="password" autocomplete="current-password" placeholder="••••••••">
+            <button type="button" id="lgEye" class="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-400" aria-label="Papar kata laluan"><i class="fa-solid fa-eye"></i></button>
+          </div>
+          <button id="lgBtn" type="submit" class="mt-4 w-full rounded-xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-right-to-bracket mr-1"></i> Log Masuk</button>
+          <button type="button" id="lgUsePin" onclick="lgSetMode('pin')" class="mt-3 hidden w-full text-xs font-semibold text-primary-700">Guna PIN</button>
+          <p id="lgHint" class="mt-4 hidden rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800"><i class="fa-solid fa-circle-info mr-1"></i> Kata laluan lalai: <b>admin123</b>. Selepas masuk, anda boleh tetapkan PIN 4 digit.</p>
+        </form>
+        <label class="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-600"><input id="lgRemember" type="checkbox" class="h-4 w-4" checked> Kekal log masuk di peranti ini (tak perlu log masuk setiap kali buka)</label>
       </div>
-      <button id="lgBtn" type="submit" class="mt-5 w-full rounded-xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-right-to-bracket mr-1"></i> Log Masuk</button>
-      <p id="lgHint" class="mt-4 hidden rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800"><i class="fa-solid fa-circle-info mr-1"></i> Akaun lalai: <b>admin</b> / <b>admin123</b>. Sila tukar kata laluan selepas log masuk.</p>
-    </form>
-    <p class="mt-5 text-center text-xs text-white/60">Madrasah Pro v2.0 &middot; Data dilindungi kata laluan</p>
+    </div>
+    <p class="mt-5 text-center text-xs text-white/60">Madrasah Pro v2.0 &middot; Data dilindungi PIN / kata laluan</p>
   </div>
 </div>
 
@@ -618,6 +636,18 @@
                 </div>
                 <button id="btnPw" class="w-full rounded-xl border border-primary-600 px-5 py-2.5 text-sm font-bold text-primary-700 hover:bg-primary-50"><i class="fa-solid fa-key mr-1"></i> Tukar Kata Laluan</button>
               </div>
+              <div class="mt-5 space-y-3 border-t border-slate-100 pt-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div><p class="text-sm font-bold"><i class="fa-solid fa-table-cells mr-1 text-primary-600"></i> PIN Log Masuk Pantas</p><p id="pinStatus" class="text-xs text-slate-500">-</p></div>
+                  <div class="flex shrink-0 gap-2">
+                    <button id="btnSetPin" class="rounded-xl bg-primary-600 px-3 py-2 text-xs font-bold text-white">Tetapkan PIN</button>
+                    <button id="btnDelPin" class="hidden rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600">Buang</button>
+                  </div>
+                </div>
+                <div><label class="label" for="sAutoLock">Kunci skrin automatik (peranti ini)</label>
+                  <select id="sAutoLock" class="field"><option value="0">Tidak sekali-kali</option><option value="5">Selepas 5 minit tiada aktiviti</option><option value="15">Selepas 15 minit tiada aktiviti</option><option value="30">Selepas 30 minit tiada aktiviti</option><option value="60">Selepas 1 jam tiada aktiviti</option></select>
+                  <p class="mt-1 text-[11px] text-slate-500">Bila dikunci, buka semula dengan PIN sahaja.</p></div>
+              </div>
             </div>
 
             <div data-admin class="card p-5 md:p-6">
@@ -799,7 +829,6 @@ const DEFAULT_BAYARAN = {
 };
 const THEME_HEX = { emerald: '#059669', blue: '#2563eb', gold: '#d97706' };
 const TAB_TITLES = { dashboard: 'Papan Pemuka', students: 'Pelajar & Waris', payment: 'Kutipan Yuran', reports: 'Laporan', settings: 'Tetapan' };
-const IDLE_LOCK_MS = 15 * 60 * 1000;
 
 /* ---------- Keadaan ---------- */
 const DB = { settings: { ...DEFAULT_SETTINGS }, students: [], tx: [], users: [] };
@@ -1129,41 +1158,136 @@ async function ensureAdmin() {
 function isAdmin() { return currentUser && currentUser.role === 'admin'; }
 function requireAdmin() { if (isAdmin()) return true; toast('Hanya Admin dibenarkan melakukan tindakan ini.', 'error'); return false; }
 
+/* ---------- Log masuk ringkas: pilih nama -> PIN 4 digit / kata laluan; sesi kekal pada peranti ---------- */
+const SESSION_KEY = 'mp2_session';
+const SESSION_DAYS = 30;
+let lgUserSel = null, lgMode = 'pw', lgPin = '';
+function getSession() { try { const v = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); return v && v.exp > Date.now() ? v : null; } catch (e) { return null; } }
+function setSession(uid) { try { localStorage.setItem(SESSION_KEY, JSON.stringify({ uid, exp: Date.now() + SESSION_DAYS * 864e5 })); } catch (e) {} }
+function clearSession() { try { localStorage.removeItem(SESSION_KEY); } catch (e) {} }
+function autoLockMin() { try { const v = localStorage.getItem('mp_autolock'); return v === null ? 15 : +v; } catch (e) { return 15; } }
+function loginBlocked() {
+  if (Date.now() < loginBlockUntil) { toast(`Terlalu banyak cubaan. Cuba lagi dalam ${Math.ceil((loginBlockUntil - Date.now()) / 1000)} saat.`, 'error'); return true; }
+  return false;
+}
+function loginFailed(msg) {
+  loginFails++;
+  if (loginFails >= 5) { loginBlockUntil = Date.now() + 30000; loginFails = 0; }
+  const f = $('lgStepAuth'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+  if (navigator.vibrate) navigator.vibrate(120);
+  toast(msg, 'error');
+}
+function completeLogin(u, silent = false) {
+  loginFails = 0; currentUser = u; lgPin = ''; $('lgPass').value = '';
+  if (silent || $('lgRemember').checked) setSession(u.id); else clearSession();
+  $('loginScreen').classList.add('hidden'); $('app').classList.remove('hidden');
+  applyUser(); resetIdle(); renderCurrent();
+  if (!silent) toast(`Selamat datang, ${u.nama}!`, 'success');
+  if (u.mustChange) setTimeout(() => toast('Anda menggunakan kata laluan lalai. Sila tukar di Tetapan.', 'warning'), 900);
+  else if (!u.pinHash && !u.pinOffered && !silent) setTimeout(offerPin, 700);
+}
 async function doLogin(e) {
   e.preventDefault();
-  if (Date.now() < loginBlockUntil) return toast(`Terlalu banyak cubaan. Cuba lagi dalam ${Math.ceil((loginBlockUntil - Date.now()) / 1000)} saat.`, 'error');
-  const un = $('lgUser').value.trim().toLowerCase(), pw = $('lgPass').value;
-  if (!un || !pw) return toast('Sila isi nama pengguna dan kata laluan.', 'warning');
-  const u = DB.users.find(x => x.username === un);
-  if (u && await hashPw(pw, u.salt) === u.hash) {
-    loginFails = 0; currentUser = u;
-    $('lgPass').value = '';
-    $('loginScreen').classList.add('hidden'); $('app').classList.remove('hidden');
-    try { sessionStorage.setItem('mp_lastuser', u.username); } catch (er) {}
-    applyUser(); resetIdle(); renderCurrent();
-    toast(`Selamat datang, ${u.nama}!`, 'success');
-    if (u.mustChange) setTimeout(() => toast('Anda menggunakan kata laluan lalai. Sila tukar di Tetapan.', 'warning'), 900);
-  } else {
-    loginFails++;
-    if (loginFails >= 5) { loginBlockUntil = Date.now() + 30000; loginFails = 0; }
-    const f = $('loginForm'); f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
-    toast('Nama pengguna atau kata laluan salah.', 'error');
+  if (!lgUserSel || loginBlocked()) return;
+  const pw = $('lgPass').value;
+  if (!pw) return toast('Sila masukkan kata laluan.', 'warning');
+  if (await hashPw(pw, lgUserSel.salt) === lgUserSel.hash) completeLogin(lgUserSel);
+  else loginFailed('Kata laluan salah.');
+}
+function renderLoginUsers() {
+  $('lgUsers').innerHTML = DB.users.map(u => `<button type="button" onclick="lgSelect('${u.id}')" class="flex flex-col items-center gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 transition hover:bg-primary-50 hover:ring-primary-300 active:scale-95">
+      <span class="flex h-14 w-14 items-center justify-center rounded-2xl ${u.role === 'admin' ? 'bg-primary-600 text-white' : 'bg-white text-primary-700 ring-1 ring-primary-200'} text-lg font-extrabold">${esc(initials(u.nama.toUpperCase()) || 'U')}</span>
+      <span class="w-full truncate text-center text-sm font-bold">${esc(u.nama)}</span>
+      <span class="text-[11px] text-slate-500">${u.role === 'admin' ? 'Admin' : 'Kerani'}${u.pinHash ? ' · <i class="fa-solid fa-table-cells"></i> PIN' : ''}</span>
+    </button>`).join('');
+}
+function lgSelect(id) {
+  const u = DB.users.find(x => x.id === id); if (!u) return;
+  lgUserSel = u; lgPin = '';
+  $('lgStepUser').classList.add('hidden'); $('lgStepAuth').classList.remove('hidden');
+  $('lgAvatar').textContent = initials(u.nama.toUpperCase()) || 'U';
+  $('lgName').textContent = u.nama; $('lgRole').textContent = `${u.role === 'admin' ? 'Admin' : 'Kerani'} · @${u.username}`;
+  $('lgSwitch').classList.toggle('hidden', DB.users.length < 2);
+  $('lgUser').value = u.username;
+  $('lgHint').classList.toggle('hidden', !u.mustChange);
+  lgSetMode(u.pinHash ? 'pin' : 'pw');
+}
+function lgBack() { lgUserSel = null; $('lgStepAuth').classList.add('hidden'); $('lgStepUser').classList.remove('hidden'); renderLoginUsers(); }
+function lgSetMode(m) {
+  lgMode = m; lgPin = '';
+  $('lgPinBox').classList.toggle('hidden', m !== 'pin');
+  $('loginForm').classList.toggle('hidden', m !== 'pw');
+  $('lgUsePin').classList.toggle('hidden', !(lgUserSel && lgUserSel.pinHash));
+  renderPinDots();
+  if (m === 'pw') setTimeout(() => $('lgPass').focus(), 80);
+}
+function renderPinDots() {
+  $('lgPinDots').innerHTML = [0, 1, 2, 3].map(i => `<span class="h-4 w-4 rounded-full border-2 border-primary-600 transition ${i < lgPin.length ? 'scale-110 bg-primary-600' : ''}"></span>`).join('');
+}
+function buildPad() {
+  $('lgPad').innerHTML = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'c', '0', 'b'].map(k =>
+    k === 'c' ? '<button type="button" data-k="c" class="h-14 rounded-2xl text-xs font-semibold text-slate-500">Padam</button>'
+    : k === 'b' ? '<button type="button" data-k="b" class="h-14 rounded-2xl text-lg text-slate-500" aria-label="Undur"><i class="fa-solid fa-delete-left"></i></button>'
+    : `<button type="button" data-k="${k}" class="h-14 rounded-2xl bg-slate-100 text-xl font-bold text-slate-800 transition active:scale-95 active:bg-primary-100">${k}</button>`).join('');
+  $('lgPad').addEventListener('click', e => { const b = e.target.closest('button'); if (b) pinKey(b.dataset.k); });
+  document.addEventListener('keydown', e => {
+    if ($('loginScreen').classList.contains('hidden') || lgMode !== 'pin' || $('lgPinBox').classList.contains('hidden')) return;
+    if (/^\d$/.test(e.key)) pinKey(e.key); else if (e.key === 'Backspace') pinKey('b'); else if (e.key === 'Escape') pinKey('c');
+  });
+}
+async function pinKey(k) {
+  if (k === 'c') lgPin = ''; else if (k === 'b') lgPin = lgPin.slice(0, -1); else if (lgPin.length < 4) lgPin += k;
+  renderPinDots();
+  if (lgPin.length === 4 && lgUserSel) {
+    if (loginBlocked()) { lgPin = ''; return renderPinDots(); }
+    const ok = await hashPw(lgPin, lgUserSel.pinSalt) === lgUserSel.pinHash;
+    if (ok) completeLogin(lgUserSel);
+    else { lgPin = ''; setTimeout(renderPinDots, 150); loginFailed('PIN salah.'); }
   }
 }
-function showLogin() {
+function showLogin(lockUser = null) {
   $('app').classList.add('hidden'); document.body.classList.remove('doc-mode');
   $('loginScreen').classList.remove('hidden');
-  $('lgHint').classList.toggle('hidden', !(DB.users.length === 1 && DB.users[0].mustChange));
-  let last = ''; try { last = sessionStorage.getItem('mp_lastuser') || ''; } catch (e) {}
-  if (last && !$('lgUser').value) $('lgUser').value = last;
-  setTimeout(() => ($('lgUser').value ? $('lgPass') : $('lgUser')).focus(), 100);
   clearTimeout(idleTimer);
+  renderLoginUsers();
+  const u = lockUser || (DB.users.length === 1 ? DB.users[0] : null);
+  if (u) lgSelect(u.id); else lgBack();
+  $('lgRemember').checked = !!getSession() || !lockUser;
 }
-function lockApp() { currentUser = null; showLogin(); }
-function logout() { currentUser = null; try { sessionStorage.removeItem('mp_lastuser'); } catch (e) {} $('lgUser').value = ''; showLogin(); toast('Anda telah log keluar.', 'info'); }
+function lockApp() { const u = currentUser; currentUser = null; showLogin(u); }
+function logout() { currentUser = null; clearSession(); showLogin(); toast('Anda telah log keluar.', 'info'); }
+function offerPin() {
+  if (!currentUser) return;
+  currentUser.pinOffered = true; persist('users');
+  confirmModal({ title: 'Log masuk lebih pantas?', icon: 'fa-table-cells', danger: false, okText: 'Tetapkan PIN',
+    message: 'Tetapkan <b>PIN 4 digit</b> supaya anda tidak perlu taip kata laluan lagi — tekan 4 nombor sahaja untuk masuk.' })
+    .then(ok => { if (ok) setPinDialog(); });
+}
+function setPinDialog() {
+  if (!currentUser) return;
+  formDialog({ title: currentUser.pinHash ? 'Tukar PIN' : 'Tetapkan PIN 4 Digit', okText: 'Simpan PIN',
+    html: `<p class="text-sm text-slate-600">PIN digunakan untuk log masuk dan buka kunci skrin dengan pantas.</p>
+      <div><label class="label">PIN Baharu (4 digit)</label><input name="p1" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" class="field text-center font-mono text-2xl tracking-[.6em]"></div>
+      <div><label class="label">Sahkan PIN</label><input name="p2" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" class="field text-center font-mono text-2xl tracking-[.6em]"></div>`,
+    onOpen: b => b.querySelectorAll('input').forEach(i => i.addEventListener('input', () => { i.value = i.value.replace(/\D/g, '').slice(0, 4); })),
+    onSubmit: async b => {
+      const p1 = b.querySelector('[name="p1"]').value, p2 = b.querySelector('[name="p2"]').value;
+      if (!/^\d{4}$/.test(p1)) { toast('PIN mesti 4 digit nombor.', 'error'); return false; }
+      if (/^(\d)\1{3}$/.test(p1) || ['1234', '4321', '0123', '9876'].includes(p1)) { toast('PIN terlalu mudah diteka. Pilih PIN lain.', 'error'); return false; }
+      if (p1 !== p2) { toast('PIN tidak sepadan.', 'error'); return false; }
+      currentUser.pinSalt = uid() + uid(); currentUser.pinHash = await hashPw(p1, currentUser.pinSalt);
+      persist('users'); renderSettings(); toast('PIN disimpan. Log masuk seterusnya hanya perlu 4 digit.', 'success');
+    } });
+}
+async function removePin() {
+  if (!currentUser || !currentUser.pinHash) return;
+  if (!await confirmModal({ title: 'Buang PIN?', message: 'Anda perlu guna kata laluan untuk log masuk selepas ini.', okText: 'Ya, Buang' })) return;
+  delete currentUser.pinHash; delete currentUser.pinSalt; persist('users'); renderSettings(); toast('PIN dibuang.', 'info');
+}
 function resetIdle() {
   clearTimeout(idleTimer);
-  if (currentUser) idleTimer = setTimeout(() => { lockApp(); toast('Sistem dikunci kerana tiada aktiviti.', 'info'); }, IDLE_LOCK_MS);
+  const min = autoLockMin();
+  if (currentUser && min > 0) idleTimer = setTimeout(() => { lockApp(); toast('Skrin dikunci kerana tiada aktiviti.', 'info'); }, min * 60000);
 }
 function applyUser() {
   if (!currentUser) return;
@@ -2416,6 +2540,12 @@ function renderSettings() {
   $('sResitEg').textContent = `Contoh: ${(by.resitPrefix || 'R').toUpperCase()}${new Date().getFullYear()}-00001`;
   $('lhPreview').innerHTML = s.letterhead ? `<img src="${s.letterhead}" class="max-h-28 w-full object-contain">` : 'Tiada kepala surat — pengepala lalai (logo + nama) digunakan';
   applyBranding(); applyUser(); renderUsers(); updateInstallUI();
+  if (currentUser) {
+    $('pinStatus').textContent = currentUser.pinHash ? 'PIN aktif — log masuk dengan 4 digit sahaja.' : 'Belum ditetapkan — log masuk perlu kata laluan.';
+    $('btnSetPin').textContent = currentUser.pinHash ? 'Tukar PIN' : 'Tetapkan PIN';
+    $('btnDelPin').classList.toggle('hidden', !currentUser.pinHash);
+  }
+  $('sAutoLock').value = String(autoLockMin());
   let bytes = 0; try { Object.values(K).forEach(k => bytes += (localStorage.getItem(k) || '').length * 2); } catch (e) {}
   $('storageInfo').innerHTML = `<i class="fa-solid fa-hard-drive mr-1"></i> <b>${DB.students.length}</b> pelajar · <b>${DB.tx.length}</b> transaksi · <b>${DB.users.length}</b> pengguna · ${(bytes / 1024).toFixed(0)} KB / ~5 MB`;
 }
@@ -2456,6 +2586,7 @@ function resetUserPw(id) {
       const pw = b.querySelector('[name="pw"]').value;
       if (pw.length < 6) { toast('Kata laluan minimum 6 aksara.', 'error'); return false; }
       u.salt = uid() + uid(); u.hash = await hashPw(pw, u.salt); u.mustChange = u.id !== currentUser.id;
+      if (u.id !== currentUser.id) { delete u.pinHash; delete u.pinSalt; }
       persist('users'); applyUser(); toast('Kata laluan dikemas kini.', 'success');
     } });
 }
@@ -2475,6 +2606,7 @@ async function changeOwnPw() {
   currentUser.salt = uid() + uid(); currentUser.hash = await hashPw(n, currentUser.salt); currentUser.mustChange = false;
   persist('users'); $('pwOld').value = $('pwNew').value = $('pwNew2').value = ''; applyUser();
   toast('Kata laluan berjaya ditukar.', 'success');
+  if (!currentUser.pinHash) setTimeout(offerPin, 800);
 }
 function saveSettings() {
   if (!requireAdmin()) return;
@@ -2596,6 +2728,10 @@ async function init() {
   $('todayLabel').textContent = new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   $('loginForm').addEventListener('submit', doLogin);
+  buildPad();
+  $('btnSetPin').addEventListener('click', setPinDialog);
+  $('btnDelPin').addEventListener('click', removePin);
+  $('sAutoLock').addEventListener('change', () => { try { localStorage.setItem('mp_autolock', $('sAutoLock').value); } catch (e) {} resetIdle(); toast('Tetapan kunci skrin disimpan.', 'success'); });
   $('lgEye').addEventListener('click', () => { const p = $('lgPass'); p.type = p.type === 'password' ? 'text' : 'password'; $('lgEye').innerHTML = `<i class="fa-solid ${p.type === 'password' ? 'fa-eye' : 'fa-eye-slash'}"></i>`; });
 
   document.addEventListener('click', e => { const t = e.target.closest('.tab-btn'); if (t) { if (t.dataset.tab === 'students') showStudentViewSilently(); switchTab(t.dataset.tab); } });
@@ -2640,11 +2776,12 @@ async function init() {
   ['click', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { if (currentUser) resetIdle(); }, { passive: true }));
   window.addEventListener('resize', fitDoc);
   window.addEventListener('afterprint', fitDoc);
-  window.addEventListener('storage', e => { if (Object.values(K).includes(e.key)) { const uid0 = currentUser && currentUser.id; loadData(); if (uid0) currentUser = DB.users.find(u => u.id === uid0) || null; if (!currentUser) return showLogin(); applyBranding(); renderCurrent(); } });
+  window.addEventListener('storage', e => { if (Object.values(K).includes(e.key)) { const uid0 = currentUser && currentUser.id; loadData(); if (uid0) currentUser = DB.users.find(u => u.id === uid0) || null; if (!currentUser) return logout(); applyBranding(); renderCurrent(); } });
 
   let start = 'dashboard'; try { start = sessionStorage.getItem('mp_tab') || 'dashboard'; } catch (e) {}
   switchTab(start);
-  showLogin();
+  const sess = getSession(), su = sess && DB.users.find(u => u.id === sess.uid);
+  if (su) completeLogin(su, true); else showLogin();
 }
 function showStudentViewSilently() { ['form', 'profile'].forEach(x => $('sv-' + x).classList.add('hidden')); $('sv-list').classList.remove('hidden'); editingId = null; }
 

@@ -1,5 +1,5 @@
 /* Madrasah Pro — Service Worker (sokongan luar talian) */
-const VERSION = 'madrasahpro-v5';
+const VERSION = 'madrasahpro-v6';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-180.png'];
 const OPTIONAL = ['./171855_2.png'];
 const CDN = [
