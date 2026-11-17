@@ -13,7 +13,7 @@ Sistem pengurusan madrasah — pelajar & waris, kutipan yuran bulanan, resit, su
 | Kategori | Ciri |
 |---|---|
 | Pelajar & Waris | Profil penuh, maklumat waris, carian pantas (nama/KP/waris/telefon), profil dengan sejarah yuran |
-| Kutipan Yuran | Yuran Sekolah & Yuran Makan berasingan, status bulanan (Telah Bayar / Bayaran Sebahagian / Tertunggak), bayaran pelbagai bulan, sejarah transaksi |
+| Kutipan Yuran | **Bayaran Pantas** (bulan tertunggak auto-dipilih, jumlah auto-dikira), **Mod Pukal** (tekan nama ramai pelajar → resit dijana sekali gus), **Rekod & Resit** (carian, resit tunggal, cetak gabungan), Yuran Sekolah & Makan (boleh satu resit), status bulanan, penyata yuran |
 | Resit & WhatsApp | Resit rasmi A4 auto-jana, muat turun PDF, kongsi PDF ke WhatsApp, mesej auto-jana |
 | Dokumen | Surat Pengesahan Pelajar, muat naik kepala surat (PNG/JPG), format A4 sedia cetak/PDF |
 | Laporan | Kutipan harian/bulanan/tahunan, senarai tunggakan, eksport CSV (Excel) & PDF |
