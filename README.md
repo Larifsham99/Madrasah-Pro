@@ -24,6 +24,27 @@ Sistem pengurusan madrasah — pelajar & waris, kutipan yuran bulanan, resit, su
 - **Yuran Sekolah**: dikenakan **sekali setahun**; boleh dibayar secara **ansuran**.
 - **Yuran Makan**: dikenakan **setiap bulan** bermula bulan daftar masuk.
 
+## Penyegerakan Banyak Peranti (Admin, Ustaz, Kerani)
+Data disegerak melalui **Google Sheet milik madrasah** (percuma). Sistem berfungsi tanpa internet dan menyegerak secara automatik bila ada sambungan.
+
+**Sediakan sekali sahaja (Admin):**
+1. Buka https://sheets.new → namakan *Madrasah Pro Data*.
+2. *Sambungan (Extensions) → Apps Script* → tampal kod dari `apps-script/Code.gs` (atau butang **Salin Kod** dalam aplikasi) → Simpan.
+3. *Terapkan → Penerapan baharu → Apl web* · Laksana sebagai **Saya** · Akses **Sesiapa sahaja**.
+4. Salin URL `/exec` → Madrasah Pro → **Tetapan → Penyegerakan Peranti** → tampal → **Aktifkan**.
+5. Tambah pengguna (Tetapan → Pengguna Sistem), kemudian tekan **Hantar WhatsApp** untuk menghantar pautan sambungan kepada Ustaz & Kerani.
+
+**Ustaz / Kerani:** tekan pautan → *Ya, Sambung* → tekan nama → masukkan kata laluan / PIN. Selesai.
+
+## Peranan
+| Peranan | Skrin |
+|---|---|
+| **Pengutip Yuran** (Ustaz) | Ringkas: Kutip · Pukal · Resit · Tunggakan · Akaun |
+| **Kerani** | Pemuka · Pelajar · Yuran · Dokumen (Surat Pengesahan, Surat Berhenti, Peringatan Tunggakan, Penyata) · Laporan |
+| **Admin** | Semua + Tetapan, Pengguna, Penyegerakan, Sandaran |
+
+Setiap pengguna mempunyai siri no. resit sendiri (cth: `R2026-H0001`) supaya tiada nombor bertindih antara peranti.
+
 ## Nota
 - Logo lalai resit: muat naik `171855_2.png` ke folder utama repo (atau guna kepala surat di Tetapan).
 - Data disimpan dalam peranti (localStorage). Gunakan **Muat Turun Sandaran** untuk backup / pindah peranti.

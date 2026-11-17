@@ -37,6 +37,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -153,7 +154,8 @@
         <label class="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4 text-xs text-slate-600"><input id="lgRemember" type="checkbox" class="h-4 w-4" checked> Kekal log masuk di peranti ini (tak perlu log masuk setiap kali buka)</label>
       </div>
     </div>
-    <p class="mt-5 text-center text-xs text-white/60">Madrasah Pro v2.0 &middot; Data dilindungi PIN / kata laluan</p>
+    <p class="mt-5 text-center"><button type="button" onclick="joinDialog()" class="rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white"><i class="fa-solid fa-link mr-1"></i> Peranti baharu? Sambung ke data madrasah</button></p>
+    <p class="mt-3 text-center text-xs text-white/60">Madrasah Pro v2.0 &middot; Data dilindungi PIN / kata laluan</p>
   </div>
 </div>
 
@@ -168,18 +170,13 @@
         <p class="brand-name truncate text-sm font-bold text-slate-800">Madrasah Misbahul Falah</p>
       </div>
     </div>
-    <nav class="space-y-1.5">
-      <button data-tab="dashboard" class="side-btn tab-btn flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid fa-chart-pie w-5"></i> Papan Pemuka</button>
-      <button data-tab="students" class="side-btn tab-btn flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid fa-users w-5"></i> Pelajar &amp; Waris</button>
-      <button data-tab="payment" class="side-btn tab-btn flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid fa-cash-register w-5"></i> Kutipan Yuran</button>
-      <button data-tab="reports" class="side-btn tab-btn flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid fa-file-invoice-dollar w-5"></i> Laporan</button>
-      <button data-tab="settings" class="side-btn tab-btn flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid fa-gear w-5"></i> Tetapan</button>
-    </nav>
+    <nav id="sideNav" class="space-y-1.5"></nav>
     <div class="mt-auto space-y-3">
       <div class="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
         <span class="user-initial flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-sm font-bold text-primary-700">A</span>
         <div class="min-w-0"><p class="user-name truncate text-sm font-semibold">-</p><p class="user-role text-[11px] text-slate-500">-</p></div>
       </div>
+      <button onclick="syncNow(true)" class="sync-badge hidden w-full rounded-xl bg-slate-50 px-3 py-2 text-left text-slate-600"></button>
       <div class="grid grid-cols-2 gap-2">
         <button onclick="lockApp()" class="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-solid fa-lock mr-1"></i> Kunci</button>
         <button onclick="logout()" class="rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"><i class="fa-solid fa-right-from-bracket mr-1"></i> Keluar</button>
@@ -199,6 +196,8 @@
         </div>
         <div class="flex shrink-0 gap-2">
           <button onclick="installApp()" class="install-btn hidden h-10 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-bold text-primary-700"><i class="fa-solid fa-download"></i> Pasang</button>
+          <button onclick="syncNow(true)" class="sync-badge hidden h-10 items-center rounded-xl bg-white/90 px-2.5 text-slate-700 [&_.sync-lbl]:hidden" aria-label="Segerak"></button>
+          <button onclick="navGo('settings')" class="mobile-gear flex h-10 w-10 items-center justify-center rounded-xl bg-white/15" aria-label="Tetapan"><i class="fa-solid fa-gear"></i></button>
           <button onclick="lockApp()" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15" aria-label="Kunci"><i class="fa-solid fa-lock"></i></button>
         </div>
       </div>
@@ -210,8 +209,9 @@
         <p id="todayLabel" class="text-sm text-slate-500"></p>
       </div>
       <div class="flex gap-2">
-        <button onclick="openStudentForm()" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-user-plus"></i> Daftar Pelajar</button>
-        <button data-tab="payment" class="tab-btn flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-cash-register"></i> Terima Bayaran</button>
+        <button onclick="syncNow(true)" class="sync-badge hidden items-center rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-600"></button>
+        <button data-staff onclick="openStudentForm()" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"><i class="fa-solid fa-user-plus"></i> Daftar Pelajar</button>
+        <button onclick="navGo(isStaff() ? 'payment' : 'kutip')" class="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-cash-register"></i> Terima Bayaran</button>
       </div>
     </header>
 
@@ -224,12 +224,15 @@
             <p class="text-sm text-slate-500">Assalamualaikum,</p>
             <h3 class="text-lg font-extrabold"><span class="user-name">-</span> 👋</h3>
           </div>
-          <div class="flex gap-2 md:hidden">
-            <button onclick="openStudentForm()" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold"><i class="fa-solid fa-user-plus mr-1"></i> Daftar</button>
-            <button data-tab="payment" class="tab-btn rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white"><i class="fa-solid fa-cash-register mr-1"></i> Bayaran</button>
-          </div>
+
         </div>
 
+        <div class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <button onclick="openStudentForm()" class="card flex items-center gap-2 p-3 text-left text-xs font-bold"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700"><i class="fa-solid fa-user-plus"></i></span>Daftar Pelajar</button>
+          <button onclick="navGo('payment')" class="card flex items-center gap-2 p-3 text-left text-xs font-bold"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-700"><i class="fa-solid fa-cash-register"></i></span>Terima Bayaran</button>
+          <button onclick="navGo('docs')" class="card flex items-center gap-2 p-3 text-left text-xs font-bold"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700"><i class="fa-solid fa-file-signature"></i></span>Surat &amp; Dokumen</button>
+          <button onclick="openReport('tunggak')" class="card flex items-center gap-2 p-3 text-left text-xs font-bold"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-700"><i class="fa-solid fa-user-clock"></i></span>Senarai Tunggakan</button>
+        </div>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
           <div class="card p-4 md:p-5">
             <div class="flex items-center justify-between"><span class="text-xs font-semibold text-slate-500">Kutipan Hari Ini</span><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-primary-700"><i class="fa-solid fa-calendar-day"></i></span></div>
@@ -302,6 +305,7 @@
                   <option value="all">Semua Status</option><option value="lunas">Telah Bayar</option><option value="tunggak">Tertunggak</option>
                 </select>
                 <select id="filterKelas" class="field md:w-40"></select>
+                <select id="filterAktif" class="field col-span-2 md:w-36"><option value="aktif">Pelajar Aktif</option><option value="berhenti">Telah Berhenti</option><option value="all">Semua</option></select>
               </div>
               <button onclick="openStudentForm()" class="rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700"><i class="fa-solid fa-user-plus mr-1"></i> Daftar Pelajar</button>
             </div>
@@ -397,7 +401,7 @@
 
       <!-- ===================== KUTIPAN YURAN ===================== -->
       <section id="tab-payment" class="tab-panel">
-        <div class="mb-4 flex overflow-x-auto rounded-xl bg-slate-200/70 p-1 text-sm font-semibold text-slate-600 scrollbar-thin">
+        <div data-staff class="mb-4 flex overflow-x-auto rounded-xl bg-slate-200/70 p-1 text-sm font-semibold text-slate-600 scrollbar-thin">
           <button data-pm="single" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-bolt mr-1"></i> Bayaran Pantas</button>
           <button data-pm="bulk" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-users-line mr-1"></i> Mod Pukal</button>
           <button data-pm="records" class="pm-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-receipt mr-1"></i> Rekod &amp; Resit</button>
@@ -405,6 +409,7 @@
 
         <!-- ===== Bayaran Pantas (seorang) ===== -->
         <div id="pm-single" class="pm-panel">
+          <div id="myToday" class="mb-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary-700 to-primary-500 p-4 text-white shadow"></div>
           <div class="grid grid-cols-1 gap-5 lg:grid-cols-5">
             <div class="min-w-0 space-y-5 lg:col-span-3">
               <div class="card p-5 md:p-6">
@@ -539,9 +544,33 @@
         </div>
       </section>
 
+      <!-- ===================== DOKUMEN ===================== -->
+      <section id="tab-docs" class="tab-panel">
+        <div class="card p-5 md:p-6">
+          <h3 class="flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">1</span> Permintaan untuk pelajar mana?</h3>
+          <div id="docPicker" class="relative mt-4">
+            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input id="docSearch" class="field pl-9" type="search" autocomplete="off" placeholder="Taip nama pelajar, No. KP atau nama waris...">
+            <div id="docResults" class="absolute inset-x-0 top-full z-20 mt-1 hidden max-h-80 overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-slate-200"></div>
+          </div>
+          <div id="docSelected" class="mt-4 hidden"></div>
+        </div>
+        <h3 class="mb-3 mt-5 flex items-center gap-2 font-bold"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 text-sm text-primary-700">2</span> Pilih dokumen</h3>
+        <div id="docTypes" class="grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+        <div class="card mt-5 p-5 md:p-6">
+          <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-layer-group text-rose-600"></i> Surat Peringatan Tunggakan Pukal</h3>
+          <p id="docBatchInfo" class="mt-1 text-xs text-slate-500"></p>
+          <div class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div><label class="label" for="docBatchKelas">Kelas</label><select id="docBatchKelas" class="field"></select></div>
+            <div><label class="label" for="docBatchMin">Tunggakan minimum (RM)</label><input id="docBatchMin" class="field" type="number" min="0" value="0"></div>
+            <button onclick="batchArrearsLetters()" class="col-span-2 self-end rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white md:col-span-1"><i class="fa-solid fa-print mr-1"></i> Jana Semua Surat</button>
+          </div>
+        </div>
+      </section>
+
       <!-- ===================== LAPORAN ===================== -->
       <section id="tab-reports" class="tab-panel">
-        <div class="mb-4 flex overflow-x-auto rounded-xl bg-slate-200/70 p-1 text-sm font-semibold text-slate-600 scrollbar-thin">
+        <div data-staff class="mb-4 flex overflow-x-auto rounded-xl bg-slate-200/70 p-1 text-sm font-semibold text-slate-600 scrollbar-thin">
           <button data-rp="tunggak" class="rp-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-user-clock mr-1"></i> Senarai Tunggakan</button>
           <button data-rp="tx" class="rp-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-receipt mr-1"></i> Transaksi</button>
           <button data-rp="ringkasan" class="rp-btn seg-btn flex-1 whitespace-nowrap rounded-lg px-4 py-2"><i class="fa-solid fa-chart-column mr-1"></i> Ringkasan &amp; Eksport</button>
@@ -619,6 +648,10 @@
         <div id="defaultPwWarn" class="mb-5 hidden rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Anda masih menggunakan <b>kata laluan lalai</b>. Sila tukar segera di bahagian <b>Akaun Saya</b>.</div>
         <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div class="space-y-5">
+            <div class="card p-5 md:p-6">
+              <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-cloud text-primary-600"></i> Penyegerakan Peranti</h3>
+              <div id="syncBody" class="mt-3"></div>
+            </div>
             <div id="installCard" class="rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 p-5 text-white shadow-lg md:p-6">
               <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-mobile-screen-button"></i> Pasang Aplikasi</h3>
               <p id="installText" class="mt-1 text-xs text-white/80">Pasang Madrasah Pro pada skrin utama telefon, tablet atau komputer. Boleh dibuka tanpa internet selepas dipasang.</p>
@@ -655,7 +688,7 @@
                 <h3 class="flex items-center gap-2 font-bold"><i class="fa-solid fa-users-gear text-primary-600"></i> Pengguna Sistem</h3>
                 <button onclick="addUser()" class="rounded-xl bg-primary-600 px-3 py-2 text-xs font-bold text-white"><i class="fa-solid fa-plus mr-1"></i> Tambah</button>
               </div>
-              <p class="mt-1 text-xs text-slate-500"><b>Admin</b>: akses penuh. <b>Kerani</b>: daftar pelajar, terima bayaran, jana resit/surat &amp; laporan (tidak boleh padam data atau ubah tetapan).</p>
+              <p class="mt-1 text-xs text-slate-500"><b>Admin</b>: akses penuh. <b>Kerani</b>: pelajar, yuran, surat &amp; laporan. <b>Pengutip Yuran</b>: skrin ringkas — kutip yuran, resit &amp; tunggakan sahaja. Setiap pengguna ada siri no. resit sendiri (cth: R2026-U0001).</p>
               <ul id="userList" class="mt-4 divide-y divide-slate-100"></ul>
             </div>
 
@@ -742,13 +775,7 @@
   </div>
 
   <nav class="no-print fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-    <div class="grid grid-cols-5">
-      <button data-tab="dashboard" class="nav-btn tab-btn flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid fa-chart-pie"></i></span>Pemuka</button>
-      <button data-tab="students" class="nav-btn tab-btn flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid fa-users"></i></span>Pelajar</button>
-      <button data-tab="payment" class="nav-btn tab-btn flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid fa-cash-register"></i></span>Bayaran</button>
-      <button data-tab="reports" class="nav-btn tab-btn flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid fa-file-invoice-dollar"></i></span>Laporan</button>
-      <button data-tab="settings" class="nav-btn tab-btn flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid fa-gear"></i></span>Tetapan</button>
-    </div>
+    <div id="bottomNav" class="grid grid-cols-5"></div>
   </nav>
 </div>
 
@@ -760,7 +787,7 @@
       <p id="docTitle" class="mr-auto hidden truncate text-sm font-semibold text-white/80 sm:block"></p>
       <button onclick="window.print()" class="rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-print"></i><span class="ml-1 hidden sm:inline">Cetak</span></button>
       <button onclick="downloadPdf()" class="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-file-pdf"></i><span class="ml-1">PDF</span></button>
-      <button id="docShareBtn" onclick="sharePdf()" class="hidden rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold"><i class="fa-brands fa-whatsapp"></i><span class="ml-1">Kongsi Resit</span></button>
+      <button id="docShareBtn" onclick="sharePdf()" class="hidden rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold"><i class="fa-brands fa-whatsapp"></i><span class="ml-1">Kongsi PDF</span></button>
       <button id="docWaBtn" onclick="docWhatsApp()" class="hidden rounded-xl bg-emerald-800 px-3 py-2 text-sm font-semibold"><i class="fa-solid fa-comment-dots"></i><span class="ml-1 hidden sm:inline">Mesej Waris</span></button>
     </div>
   </div>
@@ -793,6 +820,119 @@
   </form>
 </div>
 
+<script type="text/plain" id="gsCode">/**
+ * Madrasah Pro — Pelayan Penyegerakan (Google Apps Script)
+ * ---------------------------------------------------------
+ * Cara guna (sekali sahaja, oleh Admin):
+ *   1. Buka https://sheets.new (Google Sheet baharu), namakan "Madrasah Pro Data".
+ *   2. Menu Sambungan (Extensions) &gt; Apps Script. Padam kod sedia ada, tampal SEMUA kod ini, tekan Simpan.
+ *   3. Terapkan (Deploy) &gt; Penerapan baharu (New deployment) &gt; jenis "Apl web" (Web app).
+ *        - Laksanakan sebagai (Execute as): Saya (Me)
+ *        - Siapa yang mempunyai akses (Who has access): Sesiapa sahaja (Anyone)
+ *   4. Tekan Terapkan, benarkan akses, salin "URL apl web" (berakhir dengan /exec).
+ *   5. Tampal URL itu dalam Madrasah Pro &gt; Tetapan &gt; Penyegerakan Peranti.
+ *
+ * Data disimpan dalam helaian "data" (satu baris = satu rekod). Jangan ubah helaian itu secara manual.
+ */
+var SHEET_NAME = 'data';
+var CHUNK = 45000; // had aksara bagi satu sel Google Sheet ialah 50,000
+
+function doGet() {
+  return out_({ ok: true, app: 'MadrasahPro', ready: !!prop_('KEY') });
+}
+
+function doPost(e) {
+  var req;
+  try { req = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'bad_json' }); }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(25000);
+  try {
+    if (req.action === 'claim') {
+      if (prop_('KEY')) return out_({ ok: false, error: 'claimed' });
+      if (!req.key || String(req.key).length &lt; 16) return out_({ ok: false, error: 'bad_key' });
+      PropertiesService.getScriptProperties().setProperty('KEY', String(req.key));
+      sheet_();
+      return out_({ ok: true });
+    }
+    if (!prop_('KEY') || req.key !== prop_('KEY')) return out_({ ok: false, error: 'auth' });
+    if (req.action === 'ping') return out_({ ok: true });
+    if (req.action === 'sync') return out_(sync_(req));
+    return out_({ ok: false, error: 'action' });
+  } catch (err) {
+    return out_({ ok: false, error: String(err &amp;&amp; err.message || err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function sync_(req) {
+  var sh = sheet_();
+  var last = sh.getLastRow();
+  var width = Math.max(6, sh.getLastColumn());
+  var rows = last &gt; 1 ? sh.getRange(2, 1, last - 1, width).getValues() : [];
+  var idx = {};
+  for (var i = 0; i &lt; rows.length; i++) idx[rows[i][0] + '|' + rows[i][1]] = i;
+
+  var now = Date.now();
+  var lastSrv = Number(prop_('SRV') || 0);
+  if (now &lt;= lastSrv) now = lastSrv + 1;
+
+  var changes = req.changes || [];
+  var dirty = false;
+  changes.forEach(function (ch) {
+    if (!ch || !ch.c || !ch.id) return;
+    var k = ch.c + '|' + ch.id;
+    var at = idx[k];
+    if (at !== undefined &amp;&amp; Number(rows[at][2]) &gt; Number(ch.m || 0)) return; // rekod pelayan lebih baharu
+    var json = ch.d == null ? '' : JSON.stringify(ch.d);
+    var row = [String(ch.c), String(ch.id), String(Number(ch.m || now)), String(now), ch.d == null ? '1' : ''];
+    if (!json) row.push('');
+    for (var p = 0; p &lt; json.length; p += CHUNK) row.push(json.slice(p, p + CHUNK));
+    if (at !== undefined) rows[at] = row; else { rows.push(row); idx[k] = rows.length - 1; }
+    dirty = true;
+  });
+
+  if (dirty) {
+    var w = 6;
+    rows.forEach(function (r) { if (r.length &gt; w) w = r.length; });
+    var data = rows.map(function (r) { var c = r.slice(); while (c.length &lt; w) c.push(''); return c; });
+    var range = sh.getRange(2, 1, data.length, w);
+    range.setNumberFormat('@');
+    range.setValues(data);
+    PropertiesService.getScriptProperties().setProperty('SRV', String(now));
+  }
+
+  var since = Number(req.since || 0);
+  var outList = [];
+  rows.forEach(function (r) {
+    if (Number(r[3]) &gt; since) {
+      var json = r.slice(5).join('');
+      var d = null;
+      if (json) { try { d = JSON.parse(json); } catch (e) { d = null; } }
+      outList.push({ c: String(r[0]), id: String(r[1]), m: Number(r[2]), del: String(r[4]) === '1', d: d });
+    }
+  });
+  return { ok: true, now: dirty ? now : Math.max(lastSrv, since), changes: outList };
+}
+
+function sheet_() {
+  var ss = SpreadsheetApp.getActive();
+  var sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_NAME);
+    sh.getRange(1, 1, 1, 6).setValues([['koleksi', 'id', 'diubah', 'srv', 'dipadam', 'data']]);
+    sh.setFrozenRows(1);
+    sh.getRange('A:F').setNumberFormat('@');
+  }
+  return sh;
+}
+
+function prop_(k) { return PropertiesService.getScriptProperties().getProperty(k); }
+
+function out_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+</script>
 <script>
 'use strict';
 /* =====================================================================
@@ -828,7 +968,7 @@ const DEFAULT_BAYARAN = {
   notaResit: 'Terima kasih atas bayaran tuan/puan. Jazakallahu khairan.'
 };
 const THEME_HEX = { emerald: '#059669', blue: '#2563eb', gold: '#d97706' };
-const TAB_TITLES = { dashboard: 'Papan Pemuka', students: 'Pelajar & Waris', payment: 'Kutipan Yuran', reports: 'Laporan', settings: 'Tetapan' };
+const TAB_TITLES = { dashboard: 'Papan Pemuka', students: 'Pelajar & Waris', payment: 'Kutipan Yuran', docs: 'Dokumen & Surat', reports: 'Laporan', settings: 'Tetapan' };
 
 /* ---------- Keadaan ---------- */
 const DB = { settings: { ...DEFAULT_SETTINGS }, students: [], tx: [], users: [] };
@@ -912,7 +1052,7 @@ function ringgitWords(v) {
 /* ---------- Storan ---------- */
 function readLS(key, fallback) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v ?? fallback; } catch (e) { return fallback; } }
 function persist(...keys) {
-  try { keys.forEach(k => localStorage.setItem(K[k], JSON.stringify(DB[k]))); invalidate(); return true; }
+  try { markChanges(keys); keys.forEach(k => localStorage.setItem(K[k], JSON.stringify(DB[k]))); invalidate(); scheduleSync(); return true; }
   catch (e) { toast('Gagal menyimpan. Storan peranti mungkin penuh (cuba buang kepala surat besar).', 'error'); return false; }
 }
 
@@ -963,8 +1103,13 @@ function normStudent(o) {
     kesalahan: kes > 0 ? String(o.kesalahan || '') : '',
     masa: kes > 0 ? String(o.masa || '') : '',
     guru: kes > 0 ? String(o.guru || '') : '',
+    status: o.status === 'berhenti' ? 'berhenti' : 'aktif',
+    tarikhBerhenti: o.status === 'berhenti' ? String(o.tarikhBerhenti || '').slice(0, 10) : '',
+    sebabBerhenti: o.status === 'berhenti' ? String(o.sebabBerhenti || '') : '',
+    pindahKe: o.status === 'berhenti' ? String(o.pindahKe || '') : '',
     dicipta: o.dicipta || new Date().toISOString(),
-    dikemaskini: o.dikemaskini || new Date().toISOString()
+    dikemaskini: o.dikemaskini || new Date().toISOString(),
+    ...(o._m ? { _m: o._m } : {})
   };
 }
 function normTx(o) {
@@ -983,7 +1128,8 @@ function normTx(o) {
     jenis: js.length > 1 ? 'campur' : js[0], alokasi, jumlah: num(alokasi.reduce((a, b) => a + b.amaun, 0)),
     tarikh: /^\d{4}-\d{2}-\d{2}$/.test(o.tarikh) ? o.tarikh : todayStr(),
     kaedah: String(o.kaedah || 'Tunai'), rujukan: String(o.rujukan || ''), catatan: String(o.catatan || ''),
-    oleh: String(o.oleh || ''), dicipta: o.dicipta || new Date().toISOString()
+    oleh: String(o.oleh || ''), dicipta: o.dicipta || new Date().toISOString(),
+    ...(o._m ? { _m: o._m } : {})
   };
 }
 /* Pembantu transaksi (satu resit boleh mengandungi Yuran Sekolah & Makan) */
@@ -1067,6 +1213,7 @@ function keyRange(j, a, b) {
 function monthStatus(s, j, key) {
   const rate = rateOf(s, j);
   if (rate <= 0 || key < regKey(s, j)) return 'na';
+  if (s.status === 'berhenti' && s.tarikhBerhenti && key > periodKey(j, s.tarikhBerhenti)) return 'na';
   const p = paidFor(s.id, j, key);
   if (p >= rate - 0.001) return 'bayar';
   if (p > 0) return 'sebahagian';
@@ -1153,7 +1300,7 @@ async function makeUser(username, nama, role, password, mustChange = false) {
   return { id: uid(), username: username.toLowerCase(), nama, role, salt, hash: await hashPw(password, salt), mustChange, dicipta: new Date().toISOString() };
 }
 async function ensureAdmin() {
-  if (!DB.users.length) { DB.users.push(await makeUser('admin', 'Pentadbir', 'admin', 'admin123', true)); persist('users'); }
+  if (!DB.users.length && !syncOn()) { DB.users.push(await makeUser('admin', 'Pentadbir', 'admin', 'admin123', true)); persist('users'); }
 }
 function isAdmin() { return currentUser && currentUser.role === 'admin'; }
 function requireAdmin() { if (isAdmin()) return true; toast('Hanya Admin dibenarkan melakukan tindakan ini.', 'error'); return false; }
@@ -1181,7 +1328,9 @@ function completeLogin(u, silent = false) {
   loginFails = 0; currentUser = u; lgPin = ''; $('lgPass').value = '';
   if (silent || $('lgRemember').checked) setSession(u.id); else clearSession();
   $('loginScreen').classList.add('hidden'); $('app').classList.remove('hidden');
-  applyUser(); resetIdle(); renderCurrent();
+  applyUser(); resetIdle();
+  if (!tabAllowed(activeTab())) switchTab(defaultTab()); else renderCurrent();
+  scheduleSync(300);
   if (!silent) toast(`Selamat datang, ${u.nama}!`, 'success');
   if (u.mustChange) setTimeout(() => toast('Anda menggunakan kata laluan lalai. Sila tukar di Tetapan.', 'warning'), 900);
   else if (!u.pinHash && !u.pinOffered && !silent) setTimeout(offerPin, 700);
@@ -1198,7 +1347,7 @@ function renderLoginUsers() {
   $('lgUsers').innerHTML = DB.users.map(u => `<button type="button" onclick="lgSelect('${u.id}')" class="flex flex-col items-center gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 transition hover:bg-primary-50 hover:ring-primary-300 active:scale-95">
       <span class="flex h-14 w-14 items-center justify-center rounded-2xl ${u.role === 'admin' ? 'bg-primary-600 text-white' : 'bg-white text-primary-700 ring-1 ring-primary-200'} text-lg font-extrabold">${esc(initials(u.nama.toUpperCase()) || 'U')}</span>
       <span class="w-full truncate text-center text-sm font-bold">${esc(u.nama)}</span>
-      <span class="text-[11px] text-slate-500">${u.role === 'admin' ? 'Admin' : 'Kerani'}${u.pinHash ? ' · <i class="fa-solid fa-table-cells"></i> PIN' : ''}</span>
+      <span class="text-[11px] text-slate-500">${roleLabel(u.role)}${u.pinHash ? ' · <i class="fa-solid fa-table-cells"></i> PIN' : ''}</span>
     </button>`).join('');
 }
 function lgSelect(id) {
@@ -1206,7 +1355,7 @@ function lgSelect(id) {
   lgUserSel = u; lgPin = '';
   $('lgStepUser').classList.add('hidden'); $('lgStepAuth').classList.remove('hidden');
   $('lgAvatar').textContent = initials(u.nama.toUpperCase()) || 'U';
-  $('lgName').textContent = u.nama; $('lgRole').textContent = `${u.role === 'admin' ? 'Admin' : 'Kerani'} · @${u.username}`;
+  $('lgName').textContent = u.nama; $('lgRole').textContent = `${roleLabel(u.role)} · @${u.username}`;
   $('lgSwitch').classList.toggle('hidden', DB.users.length < 2);
   $('lgUser').value = u.username;
   $('lgHint').classList.toggle('hidden', !u.mustChange);
@@ -1292,10 +1441,11 @@ function resetIdle() {
 function applyUser() {
   if (!currentUser) return;
   document.querySelectorAll('.user-name').forEach(el => el.textContent = currentUser.nama);
-  document.querySelectorAll('.user-role').forEach(el => el.textContent = currentUser.role === 'admin' ? 'Admin' : 'Kerani');
+  document.querySelectorAll('.user-role').forEach(el => el.textContent = roleLabel(currentUser.role));
   document.querySelectorAll('.user-initial').forEach(el => el.textContent = initials(currentUser.nama.toUpperCase()) || 'U');
   document.querySelectorAll('[data-admin]').forEach(el => el.classList.toggle('hidden', !isAdmin()));
   $('defaultPwWarn').classList.toggle('hidden', !currentUser.mustChange);
+  renderNav();
 }
 
 /* ---------- Tema & Penjenamaan ---------- */
@@ -1314,22 +1464,24 @@ function refPrefix() {
   return (DB.settings.prefix || DB.settings.nama.split(/\s+/).map(w => w[0] || '').join('')).toUpperCase().replace(/[^A-Z0-9]/g, '') || 'MP';
 }
 function nextSeq(key) { DB.settings.seq[key] = (DB.settings.seq[key] || 0) + 1; return DB.settings.seq[key]; }
-function nextResitNo(save = true) {
+function nextResitNo() {
   const y = new Date().getFullYear();
   const pre = String((DB.settings.bayaran && DB.settings.bayaran.resitPrefix) || 'R').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'R';
-  const no = `${pre}${y}-${pad(nextSeq('resit' + y), 5)}`;
-  if (save) persist('settings');
-  return no;
+  const base = `${pre}${y}-${userCode(currentUser)}`;
+  let max = 0;
+  DB.tx.forEach(t => { if (t.noResit.startsWith(base)) { const n = parseInt(t.noResit.slice(base.length), 10); if (n > max) max = n; } });
+  return base + pad(max + 1, 4);
 }
 
 /* ---------- Navigasi ---------- */
 function switchTab(tab) {
   if (!TAB_TITLES[tab]) tab = 'dashboard';
+  if (currentUser && !tabAllowed(tab)) tab = defaultTab();
+  if (currentUser && !isStaff() && tab === 'reports') rpTab = 'tunggak';
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
-  document.querySelectorAll('.nav-btn, .side-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   $('pageTitle').textContent = TAB_TITLES[tab];
   try { sessionStorage.setItem('mp_tab', tab); } catch (e) {}
-  renderTab(tab);
+  renderTab(tab); renderNav();
   window.scrollTo({ top: 0 });
 }
 function activeTab() { const a = document.querySelector('.tab-panel.active'); return a ? a.id.replace('tab-', '') : 'dashboard'; }
@@ -1338,6 +1490,7 @@ function renderTab(tab) {
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'students') { if (!$('sv-list').classList.contains('hidden')) renderStudentList(); if (!$('sv-profile').classList.contains('hidden')) renderProfile(); }
   if (tab === 'payment') renderPayment();
+  if (tab === 'docs') renderDocs();
   if (tab === 'reports') renderReports();
   if (tab === 'settings') renderSettings();
 }
@@ -1462,6 +1615,7 @@ function showStudentView(v) {
   window.scrollTo({ top: 0 });
 }
 function statusBadge(s) {
+  if (isBerhenti(s)) return `<span class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-slate-600"><i class="fa-solid fa-person-walking-arrow-right"></i>Berhenti</span>${arrears(s).jumlah > 0 ? ` <span class="inline-flex rounded-full ${ST.tunggak.badge} px-2.5 py-1 text-[11px] font-bold">Tertunggak</span>` : ''}`;
   const a = arrears(s);
   return a.jumlah <= 0
     ? `<span class="inline-flex items-center gap-1 rounded-full ${ST.bayar.badge} px-2.5 py-1 text-[11px] font-bold"><i class="fa-solid fa-circle-check"></i>Telah Bayar</span>`
@@ -1473,8 +1627,9 @@ function discBadge(s) {
 }
 function filteredStudents() {
   const q = $('search').value.trim().toUpperCase(), qd = q.replace(/\D/g, '');
-  const fee = $('filterFee').value, kelas = $('filterKelas').value;
+  const fee = $('filterFee').value, kelas = $('filterKelas').value, akt = $('filterAktif').value;
   return DB.students.filter(s => {
+    if (akt !== 'all' && (akt === 'berhenti') !== isBerhenti(s)) return false;
     const mq = !q || s.nama.includes(q) || s.waris.nama.includes(q) || (qd.length >= 3 && (s.kp.replace(/\D/g, '').includes(qd) || s.waris.telefon.includes(qd)));
     const mf = fee === 'all' || (fee === 'lunas' ? isLunas(s) : !isLunas(s));
     return mq && mf && (kelas === 'all' || s.kelas === kelas);
@@ -1681,6 +1836,7 @@ function renderProfile() {
             <p class="text-lg font-extrabold leading-tight">${esc(s.nama)}</p>
             <p class="mt-0.5 font-mono text-sm text-white/80">${esc(s.kp)}</p>
             <p class="mt-1 text-xs text-white/80">${esc(s.kelas)} · Asrama ${esc(s.asrama)} · ${ageFromKp(s.kp) ?? '-'} tahun · ${genderFromKp(s.kp)}</p>
+            ${isBerhenti(s) ? `<p class="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold">BERHENTI sejak ${fmtDate(s.tarikhBerhenti)}${s.sebabBerhenti ? ' · ' + esc(s.sebabBerhenti) : ''}</p>` : ''}
           </div>
           <div class="hidden text-right sm:block"><p class="text-xs text-white/70">Tunggakan</p><p class="text-2xl font-extrabold">${rm(a.jumlah)}</p></div>
         </div>
@@ -1692,6 +1848,7 @@ function renderProfile() {
         ${btn(`waArrears('${s.id}')`, 'fa-brands fa-whatsapp', 'WA Tunggakan', 'bg-emerald-50 text-emerald-700')}
         ${btn(`waDisc('${s.id}')`, 'fa-solid fa-comment-dots', 'WA Disiplin', 'bg-amber-50 text-amber-700')}
         ${btn(`openStudentForm('${s.id}')`, 'fa-solid fa-pen', 'Kemas Kini', 'bg-slate-100 text-slate-700')}
+        ${isBerhenti(s) ? btn(`reactivateStudent('${s.id}')`, 'fa-solid fa-user-check', 'Aktifkan Semula', 'bg-emerald-50 text-emerald-700') : btn(`berhentiDialog('${s.id}')`, 'fa-solid fa-person-walking-arrow-right', 'Berhenti / Pindah', 'bg-slate-100 text-slate-700')}
         ${isAdmin() ? btn(`deleteStudent('${s.id}')`, 'fa-solid fa-trash-can', 'Padam', 'bg-rose-50 text-rose-600') : ''}
       </div>
     </div>
@@ -1817,6 +1974,7 @@ function createTx(s, alokasi, extra) {
 }
 function switchPm(m) { pmTab = m; renderPayment(); window.scrollTo({ top: 0 }); }
 function renderPayment() {
+  renderNav();
   document.querySelectorAll('.pm-btn').forEach(b => b.classList.toggle('active', b.dataset.pm === pmTab));
   document.querySelectorAll('.pm-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'pm-' + pmTab));
   if (pmTab === 'single') renderSingle(); else if (pmTab === 'bulk') renderBulk(); else renderRecords();
@@ -1846,7 +2004,15 @@ function paySelectStudent(id) {
   $('paySearch').value = ''; $('payResults').classList.add('hidden');
   renderPayment();
 }
+function renderMyToday() {
+  if (!currentUser) return;
+  const td = todayStr(), mine = DB.tx.filter(t => t.tarikh === td && t.oleh === currentUser.nama);
+  $('myToday').innerHTML = `<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-lg"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+    <div class="min-w-0 flex-1"><p class="text-xs text-white/80">Kutipan anda hari ini</p><p class="text-xl font-extrabold">${rm(mine.reduce((a, t) => a + t.jumlah, 0))} <span class="text-sm font-semibold text-white/80">· ${mine.length} resit</span></p></div>
+    <button onclick="navGo(isStaff() ? 'payment' : 'resit');switchPm('records')" class="rounded-lg bg-white/20 px-3 py-2 text-xs font-bold">Lihat</button>`;
+}
 function renderSingle() {
+  renderMyToday();
   if (!pay.jenis) pay.jenis = BY().jenisLalai || 'makan';
   if (!pay.kaedah || !kaedahList().includes(pay.kaedah)) pay.kaedah = defaultKaedah();
   const s = payStudent(); if (!s) pay.sid = null;
@@ -2043,8 +2209,8 @@ async function bulkSave() {
   const ok = await confirmModal({ title: 'Simpan Kutipan Pukal?', icon: 'fa-users-line', danger: false, okText: 'Ya, Simpan',
     message: `<b>${e.length}</b> bayaran ${esc(JENIS_OPT_LABEL[bulk.jenis])} berjumlah <b>${rm(total)}</b> (${esc(bulk.kaedah)}) akan direkodkan dan <b>${e.length} resit</b> dijana.` });
   if (!ok) return;
-  const created = e.map(x => createTx(x.s, allocate(x.items, x.amount), { tarikh, kaedah: bulk.kaedah, catatan: 'Kutipan pukal' }));
-  DB.tx.push(...created);
+  const created = [];
+  e.forEach(x => { const t = createTx(x.s, allocate(x.items, x.amount), { tarikh, kaedah: bulk.kaedah, catatan: 'Kutipan pukal' }); DB.tx.push(t); created.push(t); });
   if (!persist('tx', 'settings')) { DB.tx.splice(DB.tx.length - created.length); return; }
   bulk.result = created.map(t => t.id); bulk.sent = new Set(); bulk.sel.clear();
   toast(`${created.length} bayaran direkodkan. ${created.length} resit dijana.`, 'success');
@@ -2297,8 +2463,7 @@ function letterDialog(sid) {
     onSubmit: (body) => {
       const v = n => body.querySelector(`[name="${n}"]`).value.trim();
       if (!v('tujuan')) { toast('Sila nyatakan tujuan surat.', 'error'); return false; }
-      const ref = `${refPrefix()}/SP/${new Date().getFullYear()}/${pad(nextSeq('surat' + new Date().getFullYear()), 3)}`;
-      persist('settings');
+      const ref = nextLetterRef('SP');
       setTimeout(() => openLetter(s, { ref, tujuan: v('tujuan'), tarikh: v('tarikh') || todayStr(), sesi: v('sesi'), kepada: v('kepada') }), 50);
     }
   });
@@ -2416,6 +2581,7 @@ function studentsReportDoc() {
    ===================================================================== */
 function openReport(tab) { rpTab = tab; switchTab('reports'); }
 function renderReports() {
+  if (!isStaff()) rpTab = 'tunggak';
   document.querySelectorAll('.rp-btn').forEach(b => b.classList.toggle('active', b.dataset.rp === rpTab));
   document.querySelectorAll('.rp-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'rp-' + rpTab));
   if (rpTab === 'tunggak') {
@@ -2425,7 +2591,7 @@ function renderReports() {
     $('rtList').innerHTML = arrearsList().map((x, i) => `
       <div class="card flex flex-wrap items-center gap-3 p-4">
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-sm font-extrabold text-rose-600">${i + 1}</span>
-        <div class="min-w-0 flex-1 cursor-pointer" onclick="openProfile('${x.s.id}')">
+        <div class="min-w-0 flex-1 cursor-pointer" onclick="${isStaff() ? `openProfile('${x.s.id}')` : `goPay('${x.s.id}')`}">
           <p class="truncate font-bold">${esc(x.s.nama)}</p>
           <p class="truncate text-xs text-slate-500">${esc(x.s.kelas)} · Waris: ${esc(x.s.waris.nama || '-')} (${esc(x.s.waris.telefon)})</p>
           <p class="mt-1 text-[11px] text-slate-500">${[x.a.makan > 0 ? `Makan ${rm(x.a.makan)} (${x.a.bulan.makan.length} bulan)` : '', x.a.sekolah > 0 ? `Sekolah ${rm(x.a.sekolah)} (${periodsText('sekolah', x.a.bulan.sekolah)})` : ''].filter(Boolean).join(' · ')}</p>
@@ -2546,6 +2712,7 @@ function renderSettings() {
     $('btnDelPin').classList.toggle('hidden', !currentUser.pinHash);
   }
   $('sAutoLock').value = String(autoLockMin());
+  renderSyncCard();
   let bytes = 0; try { Object.values(K).forEach(k => bytes += (localStorage.getItem(k) || '').length * 2); } catch (e) {}
   $('storageInfo').innerHTML = `<i class="fa-solid fa-hard-drive mr-1"></i> <b>${DB.students.length}</b> pelajar · <b>${DB.tx.length}</b> transaksi · <b>${DB.users.length}</b> pengguna · ${(bytes / 1024).toFixed(0)} KB / ~5 MB`;
 }
@@ -2554,7 +2721,7 @@ function renderUsers() {
   $('userList').innerHTML = DB.users.map(u => `
     <li class="flex items-center gap-3 py-3">
       <span class="flex h-9 w-9 items-center justify-center rounded-xl ${u.role === 'admin' ? 'bg-primary-100 text-primary-700' : 'bg-slate-100 text-slate-600'}"><i class="fa-solid ${u.role === 'admin' ? 'fa-user-shield' : 'fa-user'}"></i></span>
-      <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${esc(u.nama)} ${u.id === currentUser.id ? '<span class="text-xs text-slate-400">(anda)</span>' : ''}</p><p class="text-[11px] text-slate-500">@${esc(u.username)} · ${u.role === 'admin' ? 'Admin' : 'Kerani'}</p></div>
+      <div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${esc(u.nama)} ${u.id === currentUser.id ? '<span class="text-xs text-slate-400">(anda)</span>' : ''}</p><p class="text-[11px] text-slate-500">@${esc(u.username)} · ${roleLabel(u.role)} · Siri resit <b>${esc(userCode(u))}</b></p></div>
       <button onclick="resetUserPw('${u.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600" title="Set semula kata laluan"><i class="fa-solid fa-key text-xs"></i></button>
       ${u.id !== currentUser.id ? `<button onclick="deleteUser('${u.id}')" class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600" title="Padam"><i class="fa-solid fa-trash-can text-xs"></i></button>` : ''}
     </li>`).join('');
@@ -2564,7 +2731,7 @@ function addUser() {
   formDialog({ title: 'Tambah Pengguna', okText: 'Tambah',
     html: `<div><label class="label">Nama Penuh</label><input name="nama" class="field" placeholder="cth: Puan Aminah"></div>
       <div><label class="label">Nama Pengguna (log masuk)</label><input name="username" class="field" autocapitalize="none" placeholder="cth: kerani1"></div>
-      <div><label class="label">Peranan</label><select name="role" class="field"><option value="kerani">Kerani</option><option value="admin">Admin</option></select></div>
+      <div><label class="label">Peranan</label><select name="role" class="field"><option value="pengutip">Pengutip Yuran (Ustaz) — skrin ringkas yuran sahaja</option><option value="kerani">Kerani — pelajar, yuran, surat &amp; laporan</option><option value="admin">Admin — akses penuh</option></select></div>
       <div><label class="label">Kata Laluan (min. 6 aksara)</label><input name="pw" type="password" class="field" autocomplete="new-password"></div>`,
     onSubmit: async b => {
       const v = n => b.querySelector(`[name="${n}"]`).value.trim();
@@ -2574,7 +2741,7 @@ function addUser() {
       if (DB.users.some(u => u.username === un)) { toast('Nama pengguna telah wujud.', 'error'); return false; }
       if (v('pw').length < 6) { toast('Kata laluan minimum 6 aksara.', 'error'); return false; }
       DB.users.push(await makeUser(un, v('nama'), v('role'), v('pw')));
-      persist('users'); renderUsers(); toast(`Pengguna @${un} ditambah.`, 'success');
+      ensureUserCodes(); persist('users'); renderUsers(); toast(`Pengguna @${un} ditambah.`, 'success');
     } });
 }
 function resetUserPw(id) {
@@ -2685,6 +2852,508 @@ async function wipeAll() {
   DB.students = []; DB.tx = []; persist('students', 'tx'); renderCurrent(); toast('Semua data dipadam.', 'success');
 }
 
+/* =====================================================================
+   PENYEGERAKAN PERANTI (Google Sheet + Apps Script) — luar talian dahulu
+   ===================================================================== */
+const SYNC_CFG_KEY = 'mp2_sync', SYNC_META_KEY = 'mp2_syncmeta';
+const SYNC_C = ['students', 'tx', 'users', 'settings'];
+let syncCfg = readLS(SYNC_CFG_KEY, null) || { enabled: false };
+let syncMeta = null;
+let syncing = false, syncTimer = null, syncState = 'off', syncErr = '';
+function loadSyncMeta() {
+  syncMeta = readLS(SYNC_META_KEY, null) || {};
+  syncMeta.known = syncMeta.known || {}; syncMeta.pending = syncMeta.pending || {}; syncMeta.tomb = syncMeta.tomb || {};
+  SYNC_C.forEach(c => { syncMeta.known[c] = syncMeta.known[c] || {}; syncMeta.tomb[c] = syncMeta.tomb[c] || {}; });
+}
+function saveSyncCfg() { try { localStorage.setItem(SYNC_CFG_KEY, JSON.stringify(syncCfg)); } catch (e) {} }
+function saveSyncMeta() { try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); } catch (e) {} }
+function syncOn() { return !!(syncCfg && syncCfg.enabled && syncCfg.url && syncCfg.key); }
+function cyrb(str) {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+}
+function stripLocal(r) { const { _m, ...rest } = r; return rest; }
+function recHash(r) { return cyrb(JSON.stringify(stripLocal(r))); }
+function syncRecords(c) { return c === 'settings' ? [Object.assign(DB.settings, { id: 'main' })] : DB[c]; }
+/* Kesan perubahan tempatan (dipanggil oleh persist) — tanda rekod baharu/diubah/dipadam untuk dihantar */
+function markChanges(cols) {
+  if (!syncOn()) return;
+  const now = Date.now();
+  cols.filter(c => SYNC_C.includes(c)).forEach(c => {
+    const seen = new Set();
+    syncRecords(c).forEach(r => {
+      seen.add(r.id);
+      const h = recHash(r);
+      if (syncMeta.known[c][r.id] !== h) { syncMeta.known[c][r.id] = h; r._m = now; syncMeta.pending[c + '|' + r.id] = 1; }
+    });
+    Object.keys(syncMeta.known[c]).forEach(id => {
+      if (!seen.has(id)) { delete syncMeta.known[c][id]; syncMeta.tomb[c][id] = now; syncMeta.pending[c + '|' + id] = 1; }
+    });
+  });
+  saveSyncMeta();
+}
+function markAllPending() {
+  loadSyncMeta();
+  SYNC_C.forEach(c => { syncMeta.known[c] = {}; });
+  markChanges(SYNC_C);
+  SYNC_C.forEach(c => { try { localStorage.setItem(K[c], JSON.stringify(DB[c])); } catch (e) {} });
+}
+function scheduleSync(ms = 2500) {
+  if (!syncOn()) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(() => syncNow(), ms);
+}
+async function callGS(payload) {
+  const res = await fetch(syncCfg.url, { method: 'POST', body: JSON.stringify({ ...payload, key: syncCfg.key }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+function setSyncState(st, err = '') { syncState = st; syncErr = err; renderSyncBadge(); if (activeTab() === 'settings' && currentUser) renderSyncCard(); }
+async function syncNow(manual = false) {
+  if (!syncOn()) return false;
+  if (syncing) return false;
+  if (!navigator.onLine) { setSyncState('offline'); if (manual) toast('Tiada internet. Data disimpan dalam peranti dan akan disegerak kemudian.', 'warning'); return false; }
+  syncing = true; setSyncState('syncing');
+  try {
+    let rounds = 0, applied = 0;
+    do {
+      const keys = Object.keys(syncMeta.pending).slice(0, 400);
+      const changes = keys.map(k => {
+        const i = k.indexOf('|'), c = k.slice(0, i), id = k.slice(i + 1);
+        const rec = syncRecords(c).find(r => r.id === id);
+        return rec ? { c, id, m: rec._m || Date.now(), d: stripLocal(rec) } : { c, id, m: syncMeta.tomb[c][id] || Date.now(), d: null };
+      });
+      const res = await callGS({ action: 'sync', since: syncCfg.cursor || 0, changes });
+      if (!res || !res.ok) throw new Error(res && res.error || 'ralat');
+      changes.forEach(ch => {
+        const rec = syncRecords(ch.c).find(r => r.id === ch.id);
+        if (!rec ? syncMeta.tomb[ch.c][ch.id] === ch.m : rec._m === ch.m) delete syncMeta.pending[ch.c + '|' + ch.id];
+      });
+      applied += applyRemote(res.changes || []);
+      syncCfg.cursor = Math.max(syncCfg.cursor || 0, res.now || 0);
+      syncCfg.lastOk = Date.now(); saveSyncCfg(); saveSyncMeta();
+    } while (Object.keys(syncMeta.pending).length && ++rounds < 10);
+    setSyncState('ok');
+    if (applied) afterRemoteApply();
+    if (manual) toast(applied ? `Segerak selesai — ${applied} kemas kini diterima.` : 'Semua data telah disegerak.', 'success');
+    return true;
+  } catch (e) {
+    setSyncState('error', e.message === 'auth' ? 'Kod sambungan tidak sah' : (e.message || 'Gagal'));
+    if (manual) toast('Gagal segerak: ' + (e.message === 'auth' ? 'kod sambungan tidak sah.' : 'semak sambungan internet.'), 'error');
+    return false;
+  } finally { syncing = false; }
+}
+function applyRemote(list) {
+  let n = 0;
+  const touched = new Set();
+  list.forEach(ch => {
+    const c = ch.c; if (!SYNC_C.includes(c)) return;
+    const key = c + '|' + ch.id;
+    const arr = syncRecords(c);
+    const idx = arr.findIndex(r => r.id === ch.id);
+    const local = idx >= 0 ? arr[idx] : null;
+    const localM = local ? (local._m || 0) : (syncMeta.tomb[c][ch.id] || 0);
+    if (syncMeta.pending[key] && localM > ch.m) return; // perubahan tempatan lebih baharu — akan dihantar
+    if (ch.del || ch.d == null) {
+      if (c === 'settings') return;
+      if (idx >= 0) DB[c].splice(idx, 1);
+      delete syncMeta.known[c][ch.id]; syncMeta.tomb[c][ch.id] = ch.m; delete syncMeta.pending[key];
+    } else {
+      let rec;
+      if (c === 'students') rec = normStudent(ch.d);
+      else if (c === 'tx') rec = normTx(ch.d);
+      else if (c === 'users') rec = ch.d && ch.d.username && ch.d.hash ? { ...ch.d } : null;
+      else if (c === 'settings') rec = { ...DEFAULT_SETTINGS, ...ch.d, bayaran: { ...DEFAULT_BAYARAN, ...(ch.d.bayaran || {}) }, id: 'main' };
+      if (!rec) return;
+      rec._m = ch.m;
+      if (c === 'settings') DB.settings = rec;
+      else if (idx >= 0) DB[c][idx] = rec; else DB[c].push(rec);
+      syncMeta.known[c][ch.id] = recHash(rec); delete syncMeta.pending[key];
+      if (local && recHash(local) === syncMeta.known[c][ch.id]) return; // tiada perubahan sebenar
+    }
+    touched.add(c); n++;
+  });
+  touched.forEach(c => { try { localStorage.setItem(K[c], JSON.stringify(DB[c])); } catch (e) {} });
+  if (touched.size) invalidate();
+  if (touched.has('users') && currentUser) currentUser = DB.users.find(u => u.id === currentUser.id) || null;
+  return n;
+}
+function afterRemoteApply() {
+  applyBranding();
+  if (!currentUser) { if (!$('loginScreen').classList.contains('hidden')) { renderLoginUsers(); if (!lgUserSel && DB.users.length === 1) lgSelect(DB.users[0].id); } return; }
+  applyUser(); renderNav();
+  const t = activeTab();
+  const busy = (t === 'payment' && pmTab === 'single' && pay.sid) || (t === 'students' && !$('sv-form').classList.contains('hidden')) || !$('dlgWrap').classList.contains('hidden');
+  if (!busy && !document.body.classList.contains('doc-mode')) renderCurrent();
+}
+function renderSyncBadge() {
+  const map = {
+    off: ['', '', ''],
+    ok: ['fa-cloud', 'text-emerald-500', 'Disegerak'],
+    syncing: ['fa-rotate fa-spin', 'text-sky-500', 'Menyegerak...'],
+    offline: ['fa-cloud-arrow-up', 'text-amber-500', 'Luar talian'],
+    error: ['fa-triangle-exclamation', 'text-rose-500', 'Ralat segerak']
+  };
+  const [ic, col, lbl] = map[syncOn() ? syncState : 'off'] || map.off;
+  const pend = syncMeta ? Object.keys(syncMeta.pending).length : 0;
+  document.querySelectorAll('.sync-badge').forEach(el => {
+    el.classList.toggle('hidden', !syncOn());
+    el.title = lbl + (pend ? ` · ${pend} belum dihantar` : '');
+    el.innerHTML = `<i class="fa-solid ${ic} ${col}"></i><span class="sync-lbl ml-1 text-[11px] font-semibold">${lbl}${pend && syncState !== 'syncing' ? ` (${pend})` : ''}</span>`;
+  });
+}
+function b64e(o) { return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function b64d(s) { s = String(s).trim().replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return JSON.parse(decodeURIComponent(escape(atob(s)))); }
+function joinCode() { return b64e({ u: syncCfg.url, k: syncCfg.key, n: DB.settings.nama }); }
+function joinLink() { return `${location.origin}${location.pathname}#sambung=${joinCode()}`; }
+function renderSyncCard() {
+  const box = $('syncBody'); if (!box || !currentUser) return;
+  if (!syncOn()) {
+    box.innerHTML = isAdmin() ? `
+      <p class="text-sm text-slate-600">Sambungkan semua peranti (Admin, Ustaz pengutip, Kerani) supaya rekod pelajar, bayaran dan resit sentiasa sama. Data disimpan dalam <b>Google Sheet milik madrasah</b> anda — percuma.</p>
+      <ol class="mt-3 list-decimal space-y-1 pl-5 text-xs text-slate-600">
+        <li>Tekan <b>Panduan &amp; Salin Kod</b> dan ikut 5 langkah mudah (sekali sahaja).</li>
+        <li>Tampal URL apl web di bawah dan tekan <b>Aktifkan</b>.</li>
+        <li>Hantar pautan sambungan kepada Ustaz &amp; Kerani melalui WhatsApp — mereka cuma tekan pautan.</li>
+      </ol>
+      <button onclick="syncGuide()" class="mt-4 w-full rounded-xl border border-primary-600 px-4 py-2.5 text-sm font-bold text-primary-700"><i class="fa-solid fa-book-open mr-1"></i> Panduan &amp; Salin Kod</button>
+      <div class="mt-3"><label class="label" for="syncUrl">URL Apl Web (berakhir dengan /exec)</label><input id="syncUrl" class="field" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+      <button onclick="syncActivate()" class="mt-3 w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Aktifkan Penyegerakan</button>`
+      : `<p class="text-sm text-slate-600">Peranti ini belum disambung. Minta Admin hantar <b>pautan sambungan</b> kepada anda, kemudian tekan pautan itu.</p>
+         <button onclick="joinDialog()" class="mt-3 w-full rounded-xl border border-primary-600 px-4 py-2.5 text-sm font-bold text-primary-700"><i class="fa-solid fa-link mr-1"></i> Tampal Kod Sambungan</button>`;
+    return;
+  }
+  const pend = Object.keys(syncMeta.pending).length;
+  const st = { ok: ['bg-emerald-50 text-emerald-700', 'fa-circle-check', 'Disegerak'], syncing: ['bg-sky-50 text-sky-700', 'fa-rotate fa-spin', 'Sedang menyegerak...'], offline: ['bg-amber-50 text-amber-700', 'fa-wifi', 'Luar talian — akan disegerak bila ada internet'], error: ['bg-rose-50 text-rose-700', 'fa-triangle-exclamation', 'Ralat: ' + esc(syncErr)], off: ['bg-slate-50 text-slate-600', 'fa-cloud', 'Menunggu'] }[syncState] || ['bg-slate-50', 'fa-cloud', '-'];
+  box.innerHTML = `
+    <div class="rounded-xl ${st[0]} px-4 py-3 text-sm font-semibold"><i class="fa-solid ${st[1]} mr-1"></i> ${st[2]}</div>
+    <p class="mt-2 text-xs text-slate-500">Disambung ke: <b>${esc(syncCfg.nama || DB.settings.nama)}</b> · Segerak terakhir: ${syncCfg.lastOk ? fmtDateTime(syncCfg.lastOk) : '-'}${pend ? ` · <b>${pend}</b> rekod belum dihantar` : ''}</p>
+    <button onclick="syncNow(true)" class="mt-3 w-full rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white"><i class="fa-solid fa-rotate mr-1"></i> Segerak Sekarang</button>
+    ${isAdmin() ? `<div class="mt-4 rounded-xl border border-slate-200 p-4">
+      <p class="text-sm font-bold"><i class="fa-solid fa-mobile-screen mr-1 text-primary-600"></i> Sambungkan Peranti Lain</p>
+      <p class="mt-1 text-xs text-slate-500">Hantar pautan ini kepada Ustaz / Kerani. Mereka cuma tekan pautan → pilih nama → masuk. <b>Rahsiakan pautan ini</b> — ia memberi akses kepada data madrasah.</p>
+      <div id="syncQr" class="mx-auto mt-3 flex w-fit justify-center rounded-xl bg-white p-2 ring-1 ring-slate-200"></div>
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button onclick="shareJoin()" class="rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white"><i class="fa-brands fa-whatsapp mr-1"></i> Hantar WhatsApp</button>
+        <button onclick="copyText(joinLink(),'Pautan sambungan disalin.')" class="rounded-xl bg-slate-100 px-3 py-2.5 text-xs font-bold text-slate-700"><i class="fa-solid fa-copy mr-1"></i> Salin Pautan</button>
+      </div>
+    </div>` : ''}
+    <button onclick="syncDisconnect()" class="mt-3 w-full rounded-xl border border-rose-200 px-4 py-2 text-xs font-semibold text-rose-600">Putuskan peranti ini</button>`;
+  if (isAdmin() && window.QRCode) { try { new QRCode($('syncQr'), { text: joinLink(), width: 180, height: 180, correctLevel: QRCode.CorrectLevel.L }); } catch (e) { $('syncQr').classList.add('hidden'); } }
+  else if ($('syncQr')) $('syncQr').classList.add('hidden');
+}
+function copyText(t, msg) {
+  const done = () => toast(msg || 'Disalin.', 'success');
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done));
+  else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Gagal menyalin.', 'error'); } ta.remove(); }
+function shareJoin() {
+  const msg = `Assalamualaikum. Ini pautan untuk sambung ke sistem Madrasah Pro (${DB.settings.nama}).\n\n1) Tekan pautan di bawah\n2) Tekan "Ya, Sambung"\n3) Pilih nama anda dan log masuk\n\n${joinLink()}\n\n(Sila rahsiakan pautan ini.)`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+}
+function syncGuide() {
+  const code = $('gsCode').textContent.trim();
+  formDialog({ title: 'Sediakan Penyegerakan (sekali sahaja)', okText: 'Faham',
+    html: `<ol class="list-decimal space-y-2 pl-5 text-sm text-slate-700">
+      <li>Buka <a class="font-semibold text-primary-700 underline" href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a> (Google Sheet baharu) dengan akaun Google madrasah. Namakan <i>Madrasah Pro Data</i>.</li>
+      <li>Menu <b>Sambungan (Extensions) → Apps Script</b>. Padam kod sedia ada, kemudian tampal kod di bawah. Tekan ikon <b>Simpan</b>.</li>
+      <li><b>Terapkan (Deploy) → Penerapan baharu</b> → pilih jenis <b>Apl web</b>.<br><span class="text-xs text-slate-500">Laksanakan sebagai: <b>Saya</b> · Akses: <b>Sesiapa sahaja (Anyone)</b></span></li>
+      <li>Tekan <b>Terapkan</b> → <b>Benarkan akses</b> (pilih akaun anda → Lanjutan → Pergi ke projek).</li>
+      <li>Salin <b>URL apl web</b> (berakhir dengan <code>/exec</code>) dan tampal dalam Madrasah Pro.</li>
+    </ol>
+    <button type="button" id="copyGs" class="w-full rounded-xl bg-slate-800 px-4 py-3 text-sm font-bold text-white"><i class="fa-solid fa-copy mr-1"></i> Salin Kod Apps Script</button>
+    <textarea readonly rows="5" class="field font-mono text-[10px]">${esc(code)}</textarea>`,
+    onOpen: b => b.querySelector('#copyGs').addEventListener('click', () => copyText(code, 'Kod Apps Script disalin. Tampal dalam Apps Script.')),
+    onSubmit: () => true });
+}
+function randKey() { const a = new Uint8Array(18); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => a[i] = Math.random() * 256); return [...a].map(b => b.toString(16).padStart(2, '0')).join(''); }
+async function syncActivate() {
+  if (!requireAdmin()) return;
+  const url = $('syncUrl').value.trim();
+  if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(url)) return toast('URL tidak sah. Ia sepatutnya bermula dengan https://script.google.com/', 'error');
+  const key = randKey();
+  toast('Menyambung ke Google Sheet...', 'info');
+  try {
+    const res = await (await fetch(url, { method: 'POST', body: JSON.stringify({ action: 'claim', key }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' })).json();
+    if (!res.ok) return toast(res.error === 'claimed' ? 'Skrip ini telah diaktifkan sebelum ini. Guna pautan sambungan dari peranti Admin asal, atau buat Google Sheet baharu.' : 'Gagal: ' + res.error, 'error');
+    syncCfg = { enabled: true, url, key, nama: DB.settings.nama, cursor: 0, lastOk: 0 }; saveSyncCfg();
+    ensureUserCodes(); markAllPending();
+    toast('Penyegerakan diaktifkan! Menghantar data...', 'success');
+    renderSyncCard();
+    await syncNow(true);
+  } catch (e) { toast('Tidak dapat menghubungi skrip. Semak URL dan pastikan akses "Sesiapa sahaja".', 'error'); }
+}
+async function syncDisconnect() {
+  if (!await confirmModal({ title: 'Putuskan Peranti Ini?', message: 'Peranti ini tidak lagi menerima atau menghantar kemas kini. Data sedia ada dalam peranti kekal.', okText: 'Ya, Putuskan' })) return;
+  syncCfg = { enabled: false }; saveSyncCfg(); syncMeta = null; try { localStorage.removeItem(SYNC_META_KEY); } catch (e) {}
+  loadSyncMeta(); setSyncState('off'); renderSyncCard(); toast('Peranti diputuskan daripada penyegerakan.', 'info');
+}
+function joinDialog() {
+  formDialog({ title: 'Sambung ke Data Madrasah', okText: 'Sambung',
+    html: `<p class="text-sm text-slate-600">Tampal <b>pautan</b> atau <b>kod sambungan</b> yang dihantar oleh Admin.</p><textarea name="code" rows="3" class="field font-mono text-xs" placeholder="https://...#sambung=..."></textarea>`,
+    onSubmit: b => { const v = b.querySelector('[name="code"]').value.trim(); const code = v.includes('#sambung=') ? v.split('#sambung=')[1] : v; if (!code) { toast('Sila tampal kod.', 'error'); return false; } setTimeout(() => joinWithCode(code), 50); } });
+}
+async function joinWithCode(code) {
+  let cfg;
+  try { cfg = b64d(code); if (!cfg.u || !cfg.k) throw 0; } catch (e) { return toast('Kod sambungan tidak sah.', 'error'); }
+  const hasData = DB.students.length || DB.tx.length;
+  const ok = await confirmModal({ title: `Sambung ke ${esc(cfg.n || 'madrasah')}?`, icon: 'fa-link', danger: false, okText: 'Ya, Sambung',
+    message: `Peranti ini akan menggunakan data bersama madrasah dan disegerak secara automatik.${hasData ? '<br><b class="text-rose-600">Data sedia ada dalam peranti ini akan digantikan.</b>' : ''}` });
+  if (!ok) return;
+  currentUser = null; clearSession();
+  DB.students = []; DB.tx = []; DB.users = []; DB.settings = { ...DEFAULT_SETTINGS, bayaran: { ...DEFAULT_BAYARAN }, id: 'main' };
+  SYNC_C.forEach(c => { try { localStorage.setItem(K[c], JSON.stringify(DB[c])); } catch (e) {} });
+  syncCfg = { enabled: true, url: cfg.u, key: cfg.k, nama: cfg.n || '', cursor: 0, lastOk: 0 }; saveSyncCfg();
+  try { localStorage.removeItem(SYNC_META_KEY); } catch (e) {} loadSyncMeta(); invalidate();
+  toast('Menyambung dan memuat turun data...', 'info');
+  showLogin();
+  const okSync = await syncNow();
+  if (okSync && DB.users.length) { toast(`Berjaya disambung ke ${DB.settings.nama}. Pilih nama anda.`, 'success'); applyBranding(); showLogin(); }
+  else if (okSync) toast('Disambung, tetapi tiada akaun pengguna lagi. Minta Admin segerak dahulu.', 'warning');
+  else toast('Gagal memuat turun data. Semak internet dan cuba "Segerak" semula.', 'error');
+}
+function checkJoinHash() {
+  const m = location.hash.match(/#sambung=([A-Za-z0-9_-]+)/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  setTimeout(() => joinWithCode(m[1]), 300);
+}
+
+/* =====================================================================
+   PERANAN & NAVIGASI
+   ===================================================================== */
+const ROLES = { admin: 'Admin', kerani: 'Kerani', pengutip: 'Pengutip Yuran' };
+function roleLabel(r) { return ROLES[r] || r; }
+function isStaff() { return currentUser && (currentUser.role === 'admin' || currentUser.role === 'kerani'); }
+const NAV_ITEMS = {
+  dashboard: { tab: 'dashboard', icon: 'fa-chart-pie', label: 'Papan Pemuka', short: 'Pemuka' },
+  students: { tab: 'students', icon: 'fa-users', label: 'Pelajar & Waris', short: 'Pelajar' },
+  payment: { tab: 'payment', icon: 'fa-cash-register', label: 'Kutipan Yuran', short: 'Yuran' },
+  docs: { tab: 'docs', icon: 'fa-file-signature', label: 'Dokumen & Surat', short: 'Dokumen' },
+  reports: { tab: 'reports', icon: 'fa-file-invoice-dollar', label: 'Laporan', short: 'Laporan' },
+  settings: { tab: 'settings', icon: 'fa-gear', label: 'Tetapan', short: 'Tetapan' },
+  kutip: { tab: 'payment', pm: 'single', icon: 'fa-hand-holding-dollar', label: 'Kutip Yuran', short: 'Kutip' },
+  pukal: { tab: 'payment', pm: 'bulk', icon: 'fa-users-line', label: 'Kutipan Pukal', short: 'Pukal' },
+  resit: { tab: 'payment', pm: 'records', icon: 'fa-receipt', label: 'Resit', short: 'Resit' },
+  tunggak: { tab: 'reports', rp: 'tunggak', icon: 'fa-user-clock', label: 'Tunggakan', short: 'Tunggakan' },
+  akaun: { tab: 'settings', icon: 'fa-user-gear', label: 'Akaun Saya', short: 'Akaun' }
+};
+const ROLE_NAV = {
+  admin: ['dashboard', 'students', 'payment', 'docs', 'reports', 'settings'],
+  kerani: ['dashboard', 'students', 'payment', 'docs', 'reports', 'settings'],
+  pengutip: ['kutip', 'pukal', 'resit', 'tunggak', 'akaun']
+};
+function navList() { return (ROLE_NAV[currentUser ? currentUser.role : 'admin'] || ROLE_NAV.kerani).map(k => ({ key: k, ...NAV_ITEMS[k] })); }
+function tabAllowed(tab) { return navList().some(i => i.tab === tab); }
+function defaultTab() { return navList()[0].tab; }
+function navGo(key) {
+  const it = NAV_ITEMS[key]; if (!it) return;
+  if (it.pm) pmTab = it.pm;
+  if (it.rp) rpTab = it.rp;
+  if (it.tab === 'students') showStudentViewSilently();
+  switchTab(it.tab);
+}
+function navActiveKey(tab) {
+  const l = navList();
+  const hit = l.find(i => i.tab === tab && (!i.pm || i.pm === pmTab) && (!i.rp || i.rp === rpTab)) || l.find(i => i.tab === tab);
+  return hit ? hit.key : '';
+}
+function renderNav() {
+  if (!currentUser) return;
+  const l = navList(), act = navActiveKey(activeTab());
+  $('sideNav').innerHTML = l.map(i => `<button onclick="navGo('${i.key}')" class="side-btn ${i.key === act ? 'active' : ''} flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"><i class="fa-solid ${i.icon} w-5"></i> ${i.label}</button>`).join('');
+  const bl = currentUser.role === 'pengutip' ? l : l.filter(i => i.key !== 'settings');
+  $('bottomNav').style.gridTemplateColumns = `repeat(${bl.length}, minmax(0, 1fr))`;
+  $('bottomNav').innerHTML = bl.map(i => `<button onclick="navGo('${i.key}')" class="nav-btn ${i.key === act ? 'active' : ''} flex flex-col items-center gap-0.5 py-2 text-[10.5px] font-semibold text-slate-500"><span class="nav-ico flex h-8 w-11 items-center justify-center rounded-full"><i class="fa-solid ${i.icon}"></i></span>${i.short}</button>`).join('');
+  document.querySelectorAll('[data-staff]').forEach(el => el.classList.toggle('hidden', !isStaff()));
+  document.querySelectorAll('.mobile-gear').forEach(el => el.classList.toggle('hidden', currentUser.role === 'pengutip'));
+}
+
+/* Kod pengguna untuk siri no. resit (seperti buku resit setiap pengutip) */
+function ensureUserCodes() {
+  let changed = false;
+  const used = new Set(DB.users.filter(u => u.kod).map(u => u.kod));
+  DB.users.forEach(u => {
+    if (u.kod) return;
+    const base = u.role === 'admin' && !used.has('A') ? 'A' : (String(u.nama || u.username).replace(/^(USTAZAH|USTAZ|UST|CIKGU|PUAN|ENCIK|CIK)\s+/i, '').trim()[0] || 'U').toUpperCase().replace(/[^A-Z]/, 'U');
+    let k = base, n = 2; while (used.has(k)) k = base + (n++);
+    u.kod = k; used.add(k); changed = true;
+  });
+  if (changed) persist('users');
+}
+function userCode(u) { return (u && u.kod) || 'A'; }
+function nextLetterRef(type) {
+  const y = new Date().getFullYear(), key = `mp_seq_${currentUser ? currentUser.id : 'x'}_${type}${y}`;
+  let n = 0; try { n = (+localStorage.getItem(key) || 0) + 1; localStorage.setItem(key, n); } catch (e) { n = Date.now() % 1000; }
+  return `${refPrefix()}/${type}/${y}/${userCode(currentUser)}${pad(n, 3)}`;
+}
+
+/* =====================================================================
+   PUSAT DOKUMEN (Kerani / Admin)
+   ===================================================================== */
+let docSid = null;
+const SEBAB_BERHENTI = ['Berpindah ke sekolah lain', 'Berpindah tempat tinggal', 'Tamat pengajian', 'Masalah kesihatan', 'Masalah kewangan keluarga', 'Atas permintaan waris', 'Lain-lain'];
+function isBerhenti(s) { return s && s.status === 'berhenti'; }
+function renderDocs() {
+  const s = DB.students.find(x => x.id === docSid); if (!s) docSid = null;
+  $('docPicker').classList.toggle('hidden', !!s);
+  $('docSelected').classList.toggle('hidden', !s);
+  if (s) {
+    const a = arrears(s);
+    $('docSelected').innerHTML = `<div class="flex items-center gap-3 rounded-xl bg-primary-50 p-3 ring-1 ring-primary-100">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">${esc(initials(s.nama))}</span>
+      <div class="min-w-0 flex-1"><p class="truncate font-bold">${esc(s.nama)} ${isBerhenti(s) ? '<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">BERHENTI</span>' : ''}</p>
+        <p class="truncate text-xs text-slate-600">${esc(s.kp)} · ${esc(s.kelas)} · Waris: ${esc(s.waris.nama || '-')}</p>
+        <p class="text-xs">Tunggakan: <b class="${a.jumlah > 0 ? 'text-rose-600' : 'text-emerald-600'}">${a.jumlah > 0 ? rm(a.jumlah) : 'Tiada'}</b></p></div>
+      <button onclick="docSid=null;renderDocs();setTimeout(()=>$('docSearch').focus(),50)" class="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">Tukar</button></div>`;
+  }
+  const dis = !s;
+  const card = (fn, icon, color, title, desc) => `<button ${dis ? 'disabled' : ''} onclick="${fn}" class="card flex items-start gap-3 p-4 text-left transition hover:ring-2 hover:ring-primary-300 disabled:cursor-not-allowed disabled:opacity-50">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${color}"><i class="fa-solid ${icon}"></i></span>
+      <span><span class="block font-bold">${title}</span><span class="block text-xs text-slate-500">${desc}</span></span></button>`;
+  $('docTypes').innerHTML =
+    card(`letterDialog(docSid)`, 'fa-file-circle-check', 'bg-primary-100 text-primary-700', 'Surat Pengesahan Pelajar', 'Untuk biasiswa, bank, JPN, majikan waris, zakat dll.') +
+    card(`berhentiDialog(docSid)`, 'fa-person-walking-arrow-right', 'bg-slate-200 text-slate-700', 'Surat Berhenti / Pindah', 'Kemas kini status pelajar & jana surat pengesahan berhenti.') +
+    card(`arrearsLetterDialog(docSid)`, 'fa-file-invoice-dollar', 'bg-rose-100 text-rose-700', 'Surat Peringatan Tunggakan', 'Butiran tunggakan yuran tahunan &amp; bulanan kepada waris.') +
+    card(`profileYear=new Date().getFullYear();statementDoc(docSid)`, 'fa-file-lines', 'bg-sky-100 text-sky-700', 'Penyata Yuran', 'Status bayaran setahun &amp; senarai resit.');
+  const due = DB.students.filter(x => !isLunas(x));
+  $('docBatchInfo').textContent = `${due.length} pelajar mempunyai tunggakan (jumlah ${rm(due.reduce((t, x) => t + arrears(x).jumlah, 0))}).`;
+}
+function docSearchRender() {
+  const q = $('docSearch').value.trim().toUpperCase(), qd = q.replace(/\D/g, ''), box = $('docResults');
+  const res = (q ? DB.students.filter(s => s.nama.includes(q) || s.waris.nama.includes(q) || (qd.length >= 3 && s.kp.replace(/\D/g, '').includes(qd))) : [...DB.students].sort((a, b) => String(b.dikemaskini).localeCompare(String(a.dikemaskini)))).slice(0, 8);
+  if (!res.length && !q) return box.classList.add('hidden');
+  box.innerHTML = (q ? '' : '<p class="px-4 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wide text-slate-400">Terkini</p>') + (res.map(s => `<button type="button" onclick="docSid='${s.id}';$('docSearch').value='';$('docResults').classList.add('hidden');renderDocs()" class="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-slate-50">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xs font-bold text-primary-700">${esc(initials(s.nama))}</span>
+      <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">${esc(s.nama)}</span><span class="block text-[11px] text-slate-500">${esc(s.kelas)} · ${esc(s.kp)}${isBerhenti(s) ? ' · BERHENTI' : ''}</span></span></button>`).join('') || '<p class="p-4 text-center text-sm text-slate-400">Tiada pelajar sepadan.</p>');
+  box.classList.remove('hidden');
+}
+
+/* ----- Pembantu surat ----- */
+function letterTop(ref, tarikh, kepadaHtml) {
+  return `${docHeader()}${docRule()}
+    <table style="width:100%;margin-top:14px;font-size:12.5px"><tr><td></td><td style="width:48%;text-align:right">Ruj. Kami : ${esc(ref)}<br>Tarikh &nbsp;&nbsp;&nbsp;&nbsp; : ${fmtDate(tarikh)}</td></tr></table>
+    <div style="margin-top:14px;white-space:pre-line">${kepadaHtml}</div>`;
+}
+function letterSign(note) {
+  const st = DB.settings;
+  return `<p style="margin-top:14px">Sekian.</p>
+    <p style="margin-top:4px;font-weight:700">"BERILMU, BERAMAL, BERAKHLAK"</p>
+    <p style="margin-top:14px">Yang menjalankan amanah,</p>
+    <div class="avoid-break" style="margin-top:46px;width:60%"><div style="border-top:1px solid #334155;padding-top:4px">
+      <b>${esc(st.mudir || '(......................................................)')}</b><br>${esc(st.jawatan || 'Mudir')}<br>${esc(st.nama)}</div></div>
+    ${docFooter(note || 'Surat ini adalah cetakan komputer. Sila hubungi pihak madrasah untuk pengesahan')}`;
+}
+function warisBlock(s) {
+  return `<b>${esc(s.waris.nama || 'WARIS / PENJAGA')}</b>\n(Waris kepada ${esc(s.nama)})${s.waris.alamat ? '\n' + esc(s.waris.alamat) : ''}`;
+}
+
+/* ----- Berhenti / Pindah ----- */
+function berhentiDialog(sid) {
+  const s = DB.students.find(x => x.id === sid); if (!s) return;
+  formDialog({ title: 'Surat Berhenti / Pindah', okText: 'Simpan & Jana Surat',
+    html: `<p class="text-sm text-slate-600">Pelajar: <b>${esc(s.nama)}</b></p>
+      <div class="grid grid-cols-2 gap-3"><div><label class="label">Tarikh Berhenti</label><input name="tarikh" type="date" class="field" value="${esc(s.tarikhBerhenti || todayStr())}"></div>
+        <div><label class="label">Tarikh Surat</label><input name="tsurat" type="date" class="field" value="${todayStr()}"></div></div>
+      <div><label class="label">Sebab</label><input name="sebab" class="field" list="sebabList" value="${esc(s.sebabBerhenti || 'Atas permintaan waris')}"><datalist id="sebabList">${SEBAB_BERHENTI.map(x => `<option value="${x}">`).join('')}</datalist></div>
+      <div><label class="label">Berpindah ke (pilihan)</label><input name="ke" class="field" value="${esc(s.pindahKe || '')}" placeholder="cth: Maahad Tahfiz ..."></div>
+      ${!isBerhenti(s) ? `<label class="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800"><input name="upd" type="checkbox" class="mt-0.5" checked> Tukar status pelajar kepada <b>BERHENTI</b>. Yuran tidak lagi dikenakan selepas tarikh berhenti.</label>` : ''}`,
+    onSubmit: b => {
+      const v = n => (b.querySelector(`[name="${n}"]`) || {}).value;
+      const tarikh = v('tarikh');
+      if (!tarikh) { toast('Sila isi tarikh berhenti.', 'error'); return false; }
+      if (tarikh < s.tarikhDaftar) { toast('Tarikh berhenti sebelum tarikh daftar.', 'error'); return false; }
+      const upd = isBerhenti(s) || (b.querySelector('[name="upd"]') || {}).checked;
+      if (upd) {
+        Object.assign(s, { status: 'berhenti', tarikhBerhenti: tarikh, sebabBerhenti: v('sebab').trim(), pindahKe: v('ke').trim(), dikemaskini: new Date().toISOString() });
+        persist('students');
+      }
+      const info = { tarikh, sebab: v('sebab').trim(), ke: v('ke').trim(), tsurat: v('tsurat') || todayStr(), ref: nextLetterRef('SB') };
+      setTimeout(() => openBerhentiLetter(s, info), 50);
+    } });
+}
+function openBerhentiLetter(s, o) {
+  const a = arrears(s);
+  const html = `${letterTop(o.ref, o.tsurat, '<b>KEPADA SESIAPA YANG BERKENAAN</b>')}
+    <p style="margin-top:14px">Tuan/Puan,</p>
+    <p style="margin-top:10px;font-weight:800;text-decoration:underline;text-transform:uppercase">Surat Pengesahan Berhenti Pelajar — ${esc(s.nama)}</p>
+    <p style="margin-top:10px">Dengan segala hormatnya perkara di atas adalah dirujuk.</p>
+    <p style="margin-top:8px;text-align:justify">2. &nbsp;Dimaklumkan bahawa pelajar yang butirannya seperti di bawah telah <b>berhenti</b> daripada <b>${esc(DB.settings.nama)}</b> berkuat kuasa <b>${fmtDate(o.tarikh)}</b>:</p>
+    <table class="d-table kv" style="margin-top:10px">
+      <tr><th>Nama Pelajar</th><td><b>${esc(s.nama)}</b></td></tr>
+      <tr><th>No. Kad Pengenalan</th><td>${esc(s.kp)}</td></tr>
+      <tr><th>Kelas Terakhir</th><td>${esc(s.kelas)}</td></tr>
+      <tr><th>Tarikh Masuk</th><td>${fmtDate(s.tarikhDaftar)}</td></tr>
+      <tr><th>Tarikh Berhenti</th><td>${fmtDate(o.tarikh)}</td></tr>
+      <tr><th>Sebab</th><td>${esc(o.sebab || '-')}</td></tr>
+      ${o.ke ? `<tr><th>Berpindah Ke</th><td>${esc(o.ke)}</td></tr>` : ''}
+      <tr><th>Nama Waris (${esc(s.waris.hubungan)})</th><td>${esc(s.waris.nama || '-')}</td></tr>
+    </table>
+    <p style="margin-top:10px;text-align:justify">3. &nbsp;Status yuran: ${a.jumlah > 0
+      ? `terdapat baki tunggakan sebanyak <b>${rm(a.jumlah)}</b> (Yuran Sekolah ${rm(a.sekolah)}; Yuran Makan ${rm(a.makan)}) yang perlu dijelaskan oleh waris.`
+      : '<b>semua yuran telah dijelaskan</b>. Pihak madrasah tiada sebarang tuntutan kewangan terhadap pelajar ini.'}</p>
+    <p style="margin-top:8px;text-align:justify">4. &nbsp;Pihak madrasah merakamkan ucapan terima kasih atas kepercayaan waris dan mendoakan kejayaan pelajar di dunia dan akhirat.</p>
+    ${letterSign()}`;
+  openDoc({ title: 'Surat Berhenti Pelajar', html, filename: `Surat_Berhenti_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`,
+    share: { tel: s.waris.telefon, text: `Assalamualaikum waris kepada ${s.nama}. Dilampirkan Surat Pengesahan Berhenti Pelajar daripada ${DB.settings.nama}. Terima kasih.` } });
+}
+async function reactivateStudent(sid) {
+  const s = DB.students.find(x => x.id === sid); if (!s) return;
+  if (!await confirmModal({ title: 'Aktifkan Semula Pelajar?', icon: 'fa-user-check', danger: false, okText: 'Ya, Aktifkan', message: `<b>${esc(s.nama)}</b> akan kembali aktif dan yuran dikenakan semula.` })) return;
+  Object.assign(s, { status: 'aktif', tarikhBerhenti: '', sebabBerhenti: '', pindahKe: '', dikemaskini: new Date().toISOString() });
+  persist('students'); toast(`${s.nama} diaktifkan semula.`, 'success'); renderCurrent();
+}
+
+/* ----- Surat Peringatan Tunggakan ----- */
+function arrearsLetterDialog(sid) {
+  const s = DB.students.find(x => x.id === sid); if (!s) return;
+  if (isLunas(s)) return toast('Pelajar ini tiada tunggakan yuran.', 'info');
+  const d = new Date(); d.setDate(d.getDate() + 14);
+  formDialog({ title: 'Surat Peringatan Tunggakan', okText: 'Jana Surat',
+    html: `<p class="text-sm text-slate-600">Pelajar: <b>${esc(s.nama)}</b> · Tunggakan <b class="text-rose-600">${rm(arrears(s).jumlah)}</b></p>
+      <div class="grid grid-cols-2 gap-3"><div><label class="label">Tarikh Surat</label><input name="tsurat" type="date" class="field" value="${todayStr()}"></div>
+        <div><label class="label">Bayar Sebelum</label><input name="akhir" type="date" class="field" value="${dateStr(d)}"></div></div>
+      <div><label class="label">Peringatan Ke-</label><select name="kali" class="field"><option value="1">Pertama</option><option value="2">Kedua</option><option value="3">Ketiga / Akhir</option></select></div>`,
+    onSubmit: b => {
+      const v = n => b.querySelector(`[name="${n}"]`).value;
+      const o = { tsurat: v('tsurat') || todayStr(), akhir: v('akhir'), kali: +v('kali'), ref: nextLetterRef('PT') };
+      setTimeout(() => openDoc({ title: 'Surat Peringatan Tunggakan', html: arrearsLetterHtml(s, o), filename: `Peringatan_Tunggakan_${s.nama.replace(/[^A-Z0-9]+/gi, '_')}.pdf`,
+        share: { tel: s.waris.telefon, text: waArrearsMsg(s) } }), 50);
+    } });
+}
+function arrearsLetterHtml(s, o) {
+  const a = arrears(s);
+  const rows = [];
+  a.bulan.sekolah.forEach(k => rows.push([`Yuran Sekolah — Tahun ${k}`, `Kadar ${money(rateOf(s, 'sekolah'))}, dibayar ${money(paidFor(s.id, 'sekolah', k))}`, remainingFor(s, 'sekolah', k)]));
+  if (a.makan > 0) rows.push([`Yuran Makan — ${a.bulan.makan.length} bulan`, periodsText('makan', a.bulan.makan), a.makan]);
+  const kali = ['', 'PERTAMA', 'KEDUA', 'KETIGA / AKHIR'][o.kali || 1];
+  const kaedah = kaedahList().join(', ');
+  return `${letterTop(o.ref, o.tsurat, warisBlock(s))}
+    <p style="margin-top:14px">Tuan/Puan,</p>
+    <p style="margin-top:10px;font-weight:800;text-decoration:underline;text-transform:uppercase">Peringatan ${kali}: Tunggakan Yuran — ${esc(s.nama)} (${esc(s.kelas)})</p>
+    <p style="margin-top:10px">Dengan segala hormatnya perkara di atas adalah dirujuk.</p>
+    <p style="margin-top:8px;text-align:justify">2. &nbsp;Semakan rekod kewangan kami mendapati terdapat tunggakan yuran bagi anak jagaan tuan/puan seperti berikut:</p>
+    <table class="d-table" style="margin-top:10px"><thead><tr><th style="width:8%">Bil</th><th>Perkara</th><th>Butiran</th><th class="t-right" style="width:20%">Amaun (RM)</th></tr></thead>
+      <tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r[0])}</td><td style="font-size:11px">${esc(r[1])}</td><td class="t-right">${money(r[2])}</td></tr>`).join('')}
+      <tr><td colspan="3" style="text-align:right;font-weight:800">JUMLAH TUNGGAKAN</td><td class="t-right" style="font-weight:800">${money(a.jumlah)}</td></tr></tbody></table>
+    <p style="margin-top:6px;font-style:italic">${esc(ringgitWords(a.jumlah))}</p>
+    <p style="margin-top:10px;text-align:justify">3. &nbsp;Sehubungan itu, tuan/puan dimohon menjelaskan tunggakan tersebut ${o.akhir ? `<b>sebelum ${fmtDate(o.akhir)}</b>` : 'dalam tempoh terdekat'}. Bayaran boleh dibuat secara ${esc(kaedah)} di pejabat madrasah atau kepada Ustaz pengutip yuran. Yuran Sekolah boleh dijelaskan secara ansuran.</p>
+    <p style="margin-top:8px;text-align:justify">4. &nbsp;Sekiranya bayaran telah dibuat, sila abaikan surat ini. Untuk sebarang pertanyaan atau perbincangan, sila hubungi pihak madrasah${DB.settings.telefon ? ` di talian ${esc(DB.settings.telefon)}` : ''}.</p>
+    <p style="margin-top:8px;text-align:justify">5. &nbsp;Kerjasama dan perhatian tuan/puan amatlah dihargai.</p>
+    ${letterSign('Surat peringatan ini dijana daripada rekod kewangan madrasah')}`;
+}
+function batchArrearsLetters() {
+  const k = $('docBatchKelas').value, min = num($('docBatchMin').value);
+  const list = DB.students.filter(s => !isLunas(s) && (k === 'all' || s.kelas === k) && arrears(s).jumlah >= min).sort((a, b) => a.kelas.localeCompare(b.kelas) || a.nama.localeCompare(b.nama));
+  if (!list.length) return toast('Tiada pelajar sepadan dengan kriteria.', 'info');
+  const d = new Date(); d.setDate(d.getDate() + 14);
+  const html = list.map((s, i) => `<div style="${i < list.length - 1 ? 'page-break-after:always;break-after:page;' : ''}">${arrearsLetterHtml(s, { tsurat: todayStr(), akhir: dateStr(d), kali: 1, ref: nextLetterRef('PT') })}</div>${i < list.length - 1 ? '<div class="no-print" style="border-top:3px dashed #94a3b8;margin:28px -14mm"></div>' : ''}`).join('');
+  openDoc({ title: `Surat Peringatan Tunggakan · ${list.length} pelajar`, html, filename: `Peringatan_Tunggakan_Pukal_${todayStr()}.pdf` });
+}
+
 /* ---------- PWA ---------- */
 let deferredPrompt = null;
 function isStandalone() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
@@ -2720,14 +3389,24 @@ function initPWA() {
    ===================================================================== */
 async function init() {
   loadData();
+  loadSyncMeta();
   migrateV1();
   await ensureAdmin();
+  ensureUserCodes();
   applyBranding();
   initStudentForm();
   initPWA();
   $('todayLabel').textContent = new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   $('loginForm').addEventListener('submit', doLogin);
+  $('filterAktif').addEventListener('change', renderStudentList);
+  $('docSearch').addEventListener('input', docSearchRender);
+  $('docSearch').addEventListener('focus', docSearchRender);
+  document.addEventListener('click', e => { if (!e.target.closest('#docPicker')) $('docResults').classList.add('hidden'); });
+  $('docBatchKelas').innerHTML = '<option value="all">Semua Kelas</option>' + KELAS.map(k => `<option>${k}</option>`).join('');
+  window.addEventListener('online', () => scheduleSync(500));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') scheduleSync(300); });
+  setInterval(() => { if (document.visibilityState === 'visible') syncNow(); }, 45000);
   buildPad();
   $('btnSetPin').addEventListener('click', setPinDialog);
   $('btnDelPin').addEventListener('click', removePin);
@@ -2782,6 +3461,9 @@ async function init() {
   switchTab(start);
   const sess = getSession(), su = sess && DB.users.find(u => u.id === sess.uid);
   if (su) completeLogin(su, true); else showLogin();
+  renderSyncBadge();
+  if (syncOn()) scheduleSync(800);
+  checkJoinHash();
 }
 function showStudentViewSilently() { ['form', 'profile'].forEach(x => $('sv-' + x).classList.add('hidden')); $('sv-list').classList.remove('hidden'); editingId = null; }
 
